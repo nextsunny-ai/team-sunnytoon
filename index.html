@@ -398,7 +398,7 @@ function renderChat() {
   const msgs = (history[p.id] || []);
   main.innerHTML = `
     <div class="chat-header">
-      <div class="p-avatar" style="background:${p.color}">${avatarInitial(p)}</div>
+      <img class="p-avatar" src="${p.avatar}" alt="${p.name}" style="object-fit:cover;border:1.5px solid #fff;box-shadow:0 1px 4px rgba(20,18,15,0.06)" onerror="this.outerHTML='<div class=&quot;p-avatar&quot; style=&quot;background:${p.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px&quot;>${p.name.charAt(0)}</div>'">
       <div>
         <div class="chat-h-title">${p.name} <span style="font-family:var(--mono);font-size:11px;color:var(--text-mute);font-weight:500;letter-spacing:0.08em;margin-left:4px">${p.en}</span></div>
         <div class="chat-h-sub">${p.role}</div>
