@@ -178,6 +178,49 @@ button, input, textarea { font: inherit; color: inherit; }
 .send-btn:disabled { background: #DCD8D2; cursor: not-allowed; }
 .input-hint { max-width: 920px; margin: 8px auto 0; font-size: 11px; color: var(--text-mute); font-family: var(--mono); letter-spacing: 0.04em; }
 
+/* ★ 첨부·마이크 (2026-05-11) */
+.icon-btn {
+  width: 42px; height: 46px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--bg-card);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+  transition: all .15s var(--ease);
+}
+.icon-btn:hover { background: var(--bg-card-hover); border-color: var(--orange); }
+.icon-btn.recording {
+  background: #FFE5E0; border-color: #F03E3E; color: #F03E3E;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(240,62,62,0.4); } 50% { box-shadow: 0 0 0 6px rgba(240,62,62,0); } }
+
+.attach-bar {
+  display: none;
+  max-width: 920px; margin: 0 auto 8px;
+  flex-wrap: wrap; gap: 8px;
+}
+.attach-bar.show { display: flex; }
+.attach-thumb {
+  position: relative; width: 64px; height: 64px;
+  border-radius: 10px;
+  background-size: cover; background-position: center;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.attach-thumb .remove {
+  position: absolute; top: -6px; right: -6px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--text); color: #fff;
+  font-size: 12px; font-weight: 700; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; border: 2px solid var(--bg-elevated);
+}
+.attach-thumb .remove:hover { background: #F03E3E; }
+.msg-img {
+  display: block; max-width: 100%;
+  border-radius: 10px; margin-bottom: 8px;
+}
+.msg.user .msg-img { max-width: 240px; }
+
 /* ===== Modal — API key ===== */
 .modal-bg {
   position: fixed; inset:0; background: rgba(20,18,15,0.4);
@@ -352,8 +395,25 @@ const LS_HIST = 'sunny_team_history';
 function loadHistory() {
   try { const h = localStorage.getItem(LS_HIST); if(h) Object.assign(history, JSON.parse(h)); } catch(e){}
 }
+// ★ 이미지 base64 = localStorage 용량 큼 = 저장 시엔 빼고 텍스트만 (= 옛 메시지 = 텍스트만 남음 = 5MB 한계 보호)
 function saveHistory() {
-  try { localStorage.setItem(LS_HIST, JSON.stringify(history)); } catch(e){}
+  try {
+    const clean = {};
+    for (const id in history) {
+      clean[id] = history[id].map(m => {
+        if (typeof m.content === 'string') return { role: m.role, content: m.content };
+        // content가 배열 (= 이미지+텍스트) → 텍스트만 추출 (옛 메시지엔 [이미지] 표시)
+        if (Array.isArray(m.content)) {
+          const txt = m.content.find(c => c.type === 'text');
+          const imgCount = m.content.filter(c => c.type === 'image').length;
+          const prefix = imgCount > 0 ? `[이미지 ${imgCount}개] ` : '';
+          return { role: m.role, content: prefix + (txt ? txt.text : '') };
+        }
+        return { role: m.role, content: String(m.content || '') };
+      });
+    }
+    localStorage.setItem(LS_HIST, JSON.stringify(clean));
+  } catch(e){ console.warn('saveHistory:', e); }
 }
 // ★ 쿠키 + localStorage 둘 다 = home·team 같은 .sunnytoon.com 공유 (= 한 번 박으면 둘 다 작동)
 function getCookieKey() {
@@ -435,14 +495,30 @@ function renderChat() {
     <div class="msgs" id="msgs">${
       msgs.length === 0
         ? `<div class="msg system">${p.name}와 대화 시작. 본인 ANTHROPIC_API_KEY 박혀있어야 호출 가능.</div>`
-        : msgs.map(m => `<div class="msg ${m.role === 'user' ? 'user' : 'agent'}">${escapeHtml(m.role === 'assistant' ? stripMarkdown(m.content) : m.content)}</div>`).join('')
+        : msgs.map(m => {
+            // 옛 메시지 = content 텍스트 또는 배열 (= 이번 세션 = 이미지 첨부됐었던 경우)
+            let txt = '';
+            if (typeof m.content === 'string') txt = m.content;
+            else if (Array.isArray(m.content)) {
+              const t = m.content.find(c => c.type === 'text');
+              txt = t ? t.text : '';
+            }
+            const attachUrls = m._attachUrls || [];
+            const imgsHtml = attachUrls.map(u => `<img class="msg-img" src="${u}" alt="첨부">`).join('');
+            const display = m.role === 'assistant' ? stripMarkdown(txt) : txt;
+            return `<div class="msg ${m.role === 'user' ? 'user' : 'agent'}">${imgsHtml}<span style="white-space:pre-wrap">${escapeHtml(display)}</span></div>`;
+          }).join('')
     }</div>
     <div class="input-area">
+      <div class="attach-bar" id="attachBar"></div>
       <div class="input-row">
+        <button class="icon-btn" onclick="pickImage()" title="이미지 첨부">🖼️</button>
+        <button class="icon-btn" id="micBtn" onclick="toggleMic()" title="음성 입력 (Chrome·Edge)">🎤</button>
         <textarea id="inp" placeholder="${p.name}에게 말하기..." rows="1" onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
         <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="보내기 (Enter)">↑</button>
       </div>
-      <div class="input-hint">Enter 보내기 · Shift+Enter 줄바꿈 · 본인 키로 직접 호출 (BYOK)</div>
+      <input type="file" id="fileInp" accept="image/*" style="display:none" onchange="onImagePicked(this)">
+      <div class="input-hint">Enter 보내기 · Shift+Enter 줄바꿈 · 🖼️ 이미지 · 🎤 음성 · 본인 키 직접 호출 (BYOK)</div>
     </div>
   `;
   const inp = document.getElementById('inp');
@@ -459,16 +535,30 @@ async function sendMessage() {
   if(!currentPersona) return;
   const inp = document.getElementById('inp');
   const text = inp.value.trim();
-  if(!text) return;
+  if(!text && attachments.length === 0) return;
 
   const apiKey = getKey();
   if(!apiKey) { openKeyModal(); return; }
 
+  // ★ 이미지 첨부 있으면 = content 배열 (= Anthropic vision 형식) / 없으면 = string
+  const currentAttach = attachments.slice();
+  const attachUrls = currentAttach.map(a => a.dataUrl);
+  let userContentForAPI;
+  if (currentAttach.length > 0) {
+    userContentForAPI = [
+      ...currentAttach.map(a => ({ type:'image', source:{ type:'base64', media_type: a.media_type, data: a.data } })),
+      { type:'text', text: text || '이 이미지 봐주세요.' }
+    ];
+  } else {
+    userContentForAPI = text;
+  }
+
   inp.value = ''; autoGrow(inp);
+  attachments = []; renderAttachBar();
   history[currentPersona.id] = history[currentPersona.id] || [];
-  history[currentPersona.id].push({role:'user', content: text});
+  history[currentPersona.id].push({role:'user', content: userContentForAPI, _displayText: text, _attachUrls: attachUrls});
   saveHistory();
-  appendMsg('user', text);
+  appendMsg('user', text, attachUrls);
 
   const sendBtn = document.getElementById('sendBtn');
   sendBtn.disabled = true;
@@ -493,6 +583,66 @@ async function sendMessage() {
   }
 }
 
+// ★ 이미지 첨부 + 마이크 STT (2026-05-11 대표님 명시)
+let attachments = []; // [{type:'image', media_type, data:base64, dataUrl}]
+let recognition = null;
+let isRecording = false;
+
+function pickImage() { document.getElementById('fileInp').click(); }
+function onImagePicked(input) {
+  const f = input.files[0]; if (!f) return;
+  if (!f.type.startsWith('image/')) { alert('이미지 파일만 가능'); return; }
+  if (f.size > 5 * 1024 * 1024) { alert('5MB 이하만'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    const base64 = dataUrl.split(',')[1];
+    attachments.push({ type:'image', media_type: f.type, data: base64, dataUrl: dataUrl });
+    renderAttachBar();
+    input.value = '';
+  };
+  reader.readAsDataURL(f);
+}
+function removeAttach(idx) { attachments.splice(idx, 1); renderAttachBar(); }
+function renderAttachBar() {
+  const bar = document.getElementById('attachBar'); if (!bar) return;
+  if (attachments.length === 0) { bar.classList.remove('show'); bar.innerHTML = ''; return; }
+  bar.classList.add('show');
+  bar.innerHTML = attachments.map((a, i) =>
+    `<div class="attach-thumb" style="background-image:url('${a.dataUrl}')"><div class="remove" onclick="removeAttach(${i})" title="제거">×</div></div>`
+  ).join('');
+}
+
+function toggleMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('이 브라우저는 음성 인식 미지원. Chrome·Edge 권장.'); return; }
+  const btn = document.getElementById('micBtn'); if (!btn) return;
+  if (isRecording && recognition) { recognition.stop(); return; }
+  recognition = new SR();
+  recognition.lang = 'ko-KR';
+  recognition.interimResults = true;
+  recognition.continuous = false;
+  let finalText = '';
+  recognition.onstart = () => { isRecording = true; btn.classList.add('recording'); btn.textContent = '⏹'; };
+  recognition.onresult = (event) => {
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const r = event.results[i];
+      if (r.isFinal) finalText += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+    const inp = document.getElementById('inp');
+    if (inp) { inp.value = (finalText + interim).trim(); autoGrow(inp); }
+  };
+  recognition.onend = () => { isRecording = false; btn.classList.remove('recording'); btn.textContent = '🎤'; };
+  recognition.onerror = (e) => {
+    isRecording = false; btn.classList.remove('recording'); btn.textContent = '🎤';
+    if (e.error && e.error !== 'no-speech' && e.error !== 'aborted') alert('음성 인식 오류: ' + e.error);
+  };
+  try { recognition.start(); }
+  catch(e) { alert('음성 인식 시작 실패: ' + e.message); }
+}
+
 // ★ 마크다운 기호 제거 = 별표·언더스코어·헤더# = 일반 텍스트로 (2026-05-11 대표님 명시)
 function stripMarkdown(s) {
   if (!s) return s;
@@ -508,12 +658,24 @@ function stripMarkdown(s) {
     .replace(/\[(.+?)\]\((.+?)\)/g, '$1 ($2)'); // [link](url) → link (url)
 }
 
-function appendMsg(role, text) {
+function appendMsg(role, text, attachUrls) {
   const c = document.getElementById('msgs');
   if(!c) return;
   const d = document.createElement('div');
   d.className = 'msg ' + (role === 'user' ? 'user' : 'agent');
-  d.textContent = role === 'agent' ? stripMarkdown(text) : text;
+  if (attachUrls && attachUrls.length > 0) {
+    attachUrls.forEach(url => {
+      const img = document.createElement('img');
+      img.src = url; img.className = 'msg-img';
+      d.appendChild(img);
+    });
+  }
+  if (text) {
+    const span = document.createElement('span');
+    span.style.whiteSpace = 'pre-wrap';
+    span.textContent = role === 'agent' ? stripMarkdown(text) : text;
+    d.appendChild(span);
+  }
   c.appendChild(d); scrollBottom();
 }
 
