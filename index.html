@@ -770,6 +770,17 @@ body {
 
   .footer { padding: 24px 16px; flex-direction: column; align-items: flex-start; }
 }
+
+/* ★ team.sunnytoon.com 전용 = 시계·날짜·날씨·greeting 큰 영역 숨김 (대표님 2026-05-11 "시계 큰거 지워")
+   → English 박스만 살리고 = mid·News·Activity = 다 보임 */
+.hero-left .hero-eyebrow,
+.hero-left .hero-time,
+.hero-left .hero-date,
+.hero-left .hero-weather { display: none !important; }
+.hero { min-height: auto !important; grid-template-columns: 1fr 1fr !important; }
+.hero-left { padding: 32px 56px !important; }
+.hero-right { padding: 32px 48px !important; }
+.hero-english { margin-top: 0 !important; border-top: none !important; }
 </style>
 </head>
 <body>
