@@ -469,14 +469,23 @@ function appendMsg(role, text) {
 async function callClaude(apiKey, persona, hist) {
   const systemPrompt = COMMON_CTX + '\n\n' + persona.sys;
   const messages = hist.slice(-20).map(m => ({role: m.role, content: m.content}));
+  // BYOK 분기: sk-ant-oat... = OAuth Bearer / sk-ant-api... = x-api-key (= console 발급, 종량제)
+  const isOAuth = apiKey.startsWith('sk-ant-oat');
+  const headers = isOAuth ? {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + apiKey,
+    'anthropic-version': '2023-06-01',
+    'anthropic-beta': 'oauth-2025-04-20',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  } : {
+    'Content-Type': 'application/json',
+    'x-api-key': apiKey,
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  };
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
+    headers: headers,
     body: JSON.stringify({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 2048,
