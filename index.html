@@ -435,7 +435,7 @@ function renderChat() {
     <div class="msgs" id="msgs">${
       msgs.length === 0
         ? `<div class="msg system">${p.name}와 대화 시작. 본인 ANTHROPIC_API_KEY 박혀있어야 호출 가능.</div>`
-        : msgs.map(m => `<div class="msg ${m.role === 'user' ? 'user' : 'agent'}">${escapeHtml(m.content)}</div>`).join('')
+        : msgs.map(m => `<div class="msg ${m.role === 'user' ? 'user' : 'agent'}">${escapeHtml(m.role === 'assistant' ? stripMarkdown(m.content) : m.content)}</div>`).join('')
     }</div>
     <div class="input-area">
       <div class="input-row">
