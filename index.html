@@ -3,29 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUNNY TEAM — 11명 페르소나</title>
-<meta name="description" content="써니팀 11명 페르소나와 직접 대화. 본인 API 키로 호출.">
+<title>SUNNY HOME</title>
+<meta name="description" content="써니 개인 대시보드. 뉴스, 도구, 프로젝트, 마감일을 한 눈에.">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
+  --orange: #FF8C42;
+  --deep-orange: #E05A1B;
+  --amber: #FFAB40;
   --bg: #FAF8F4;
   --bg-elevated: #FFFFFF;
   --bg-card: #FFFFFF;
   --bg-card-hover: #F5F1E6;
-  --bg-input: #F5F1E6;
   --border: rgba(20,18,15,0.08);
-  --border-strong: rgba(20,18,15,0.16);
+  --border-accent: rgba(255,140,66,0.28);
   --text: #14120F;
   --text-sub: #4F4A42;
   --text-mute: #8A8278;
-  --orange: #FF8C42;
-  --deep-orange: #E05A1B;
+  --blue: #2563EB;
+  --green: #059669;
+  --purple: #7C3AED;
+  --teal: #0D9488;
+  --pink: #DB2777;
+  --yellow: #D97706;
   --orange-soft: #FFF0E2;
-  --accent-line: rgba(255,140,66,0.32);
-  --hairline: rgba(20,18,15,0.06);
   --shadow-sm: 0 1px 2px rgba(20,18,15,0.04);
   --shadow-md: 0 4px 16px rgba(20,18,15,0.06);
   --shadow-lg: 0 12px 32px rgba(20,18,15,0.08);
@@ -37,434 +41,1589 @@
   --mono: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
 }
 
-html, body { height:100%; }
+/* ─── FOCUS & A11Y ─── */
+:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 4px; }
+:focus:not(:focus-visible) { outline: none; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+
+.skip-link {
+  position: absolute; top: -100px; left: 16px;
+  padding: 8px 16px; background: var(--orange); color: #fff;
+  font-size: 0.8rem; font-weight: 600; border-radius: 6px;
+  z-index: 999; text-decoration: none;
+  transition: top 0.2s var(--ease);
+}
+.skip-link:focus { top: 8px; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
 body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--text);
-  font-feature-settings: "ss01","tnum";
-  font-size: 15px;
-  line-height: 1.55;
-  overflow:hidden;
+  overflow-x: hidden;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
-a { color: inherit; text-decoration: none; }
-button, input, textarea { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 4px; }
-
-/* ===== Top bar ===== */
-.topbar {
-  position: fixed; top:0; left:0; right:0; height:56px;
-  display:flex; align-items:center; gap:16px;
-  padding: 0 24px;
-  background: var(--bg-elevated);
+/* ─── NAV ─── */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center;
+  padding: 0 40px; height: 52px;
+  background: rgba(250,248,244,0.85);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
   border-bottom: 1px solid var(--border);
-  z-index: 50;
 }
-.brand { display:flex; align-items:center; gap:10px; font-weight: 700; letter-spacing:-0.01em; }
-.brand .dot { width:9px; height:9px; border-radius:50%; background: var(--orange); box-shadow: 0 0 0 4px var(--orange-soft); }
-.brand-label { font-size: 11px; font-weight:600; letter-spacing:0.14em; color: var(--text-mute); font-family: var(--mono); text-transform: uppercase; }
-.topbar .spacer { flex:1; }
-.back-home { font-size: 13px; color: var(--text-sub); padding: 8px 14px; border-radius: var(--r-pill); border: 1px solid var(--border); transition: all .15s var(--ease); }
-.back-home:hover { background: var(--bg-card-hover); color: var(--text); }
-.key-btn { font-size: 12px; padding: 8px 14px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--bg-card); cursor:pointer; font-family: var(--mono); color: var(--text-sub); display:flex; align-items:center; gap:6px; transition: all .15s var(--ease); }
-.key-btn:hover { border-color: var(--orange); color: var(--orange); }
-.key-btn.has-key { color: var(--orange); border-color: var(--accent-line); background: var(--orange-soft); }
-
-/* ===== Shell ===== */
-.shell { padding-top: 56px; height: 100vh; display: grid; grid-template-columns: 280px 1fr; }
-
-/* ===== Sidebar — persona list ===== */
-.aside {
-  border-right: 1px solid var(--border);
-  background: var(--bg-elevated);
-  overflow-y: auto;
-  padding: 20px 12px 24px;
+.nav-logo {
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.18em;
+  color: var(--orange);
+  margin-right: 32px;
 }
-.aside-section { margin-bottom: 18px; }
-.aside-label { font-size: 10px; font-weight:600; letter-spacing:0.16em; color: var(--text-mute); padding: 0 12px 8px; font-family: var(--mono); text-transform: uppercase; }
-.persona-item {
-  display:flex; align-items:center; gap: 12px;
-  padding: 10px 12px;
+.nav-item {
+  padding: 6px 14px; font-size: 0.75rem; font-weight: 400;
+  color: var(--text-mute); cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  border-radius: 6px; white-space: nowrap;
+  min-height: 44px; display: inline-flex; align-items: center;
+}
+.nav-item:hover { color: var(--text-sub); }
+.nav-item.active { color: var(--text); font-weight: 500; }
+.nav-spacer { flex: 1; }
+.nav-search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 16px; background: rgba(255,255,255,0.04);
+  border-radius: 20px; border: 1px solid var(--border);
+  transition: border-color 0.2s;
+}
+.nav-search:focus-within { border-color: var(--border-accent); }
+.nav-search input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-family: inherit; font-size: 0.75rem; width: 140px;
+}
+.nav-search input::placeholder { color: var(--text-mute); }
+
+/* ─── MAIN ─── */
+.main { padding-top: 52px; }
+
+/* ─── HERO ─── */
+.hero {
+  display: grid; grid-template-columns: 5fr 7fr;
+  min-height: calc(100vh - 52px);
+}
+.hero-left {
+  padding: 80px 56px 64px 72px;
+  display: flex; flex-direction: column; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.hero-left::before {
+  content: ''; position: absolute; top: -30%; right: -15%;
+  width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,140,66,0.035) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-eyebrow {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--text-mute);
+  margin-bottom: 16px;
+}
+.hero-time {
+  font-size: clamp(3rem, 6.5vw, 4.6rem);
+  font-weight: 200; letter-spacing: -0.05em; line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  position: relative;
+}
+.hero-time::after {
+  content: '';
+  position: absolute; left: 0; bottom: -6px;
+  width: 48px; height: 2px;
+  background: linear-gradient(90deg, var(--orange), var(--deep-orange));
+  border-radius: 2px;
+}
+.hero-date {
+  font-size: clamp(0.85rem, 1.4vw, 1.05rem);
+  font-weight: 400; color: var(--text-sub);
+  margin-top: 14px; letter-spacing: 0.02em;
+}
+
+/* English in hero-left (= 시간 밑 통합) */
+.hero-english {
+  margin-top: 28px; padding: 14px 0 12px;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.hero-english .he-label {
+  font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--orange); font-weight: 700;
+  padding: 3px 8px; background: var(--orange-soft); border-radius: 4px;
+  align-self: flex-start; margin-bottom: 4px;
+}
+.hero-english .he-phrase { font-size: 0.95rem; font-weight: 600; line-height: 1.45; }
+.hero-english .he-meaning { font-size: 0.78rem; color: var(--text-sub); }
+.hero-english .he-example { font-size: 0.72rem; color: var(--text-mute); font-style: italic; line-height: 1.5; margin-top: 4px; }
+.hero-greeting {
+  font-size: 0.9rem;
+  font-weight: 300; margin-top: 8px; color: var(--text-mute);
+}
+
+.hero-weather {
+  display: inline-flex; align-items: center; gap: 14px;
+  margin-top: 32px; padding: 12px 20px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  cursor:pointer;
-  transition: background .12s var(--ease);
-  margin-bottom: 2px;
+  align-self: flex-start;
+  transition: border-color 0.3s;
 }
-.persona-item:hover { background: var(--bg-card-hover); }
-.persona-item.active { background: var(--orange-soft); }
-.persona-item.active .p-name { color: var(--deep-orange); }
-.p-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
-  display:flex; align-items:center; justify-content:center;
-  font-weight: 700; font-size: 13px; color: #fff;
-  flex-shrink:0;
+.hero-weather:hover { border-color: var(--border-accent); }
+.hero-weather .temp {
+  font-size: 1.5rem; font-weight: 200; color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
-.p-info { flex:1; min-width: 0; }
-.p-name { font-size: 14px; font-weight: 600; letter-spacing:-0.01em; }
-.p-role { font-size: 11px; color: var(--text-mute); margin-top: 1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hero-weather .desc { font-size: 0.78rem; color: var(--text-sub); font-weight: 300; }
 
-/* ===== Main — chat ===== */
-.main { display:flex; flex-direction:column; min-width:0; background: var(--bg); }
-.chat-header {
-  padding: 18px 28px;
+/* HERO RIGHT — NEWS PICK */
+.hero-right {
+  padding: 56px 48px 48px 40px;
+  background: var(--bg-elevated);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.hero-right-label {
+  font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.22em;
+  color: var(--text-mute); font-weight: 700; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 10px;
+}
+.hero-right-label::before {
+  content: ''; width: 20px; height: 1.5px;
+  background: var(--orange); border-radius: 1px;
+}
+
+.pick-list {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  align-content: start;
+}
+.pick-card {
+  display: flex; gap: 12px; padding: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  cursor: pointer; text-decoration: none; color: var(--text);
+  transition: all 0.25s var(--ease);
+}
+.pick-card:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--border-accent);
+  transform: translateY(-2px);
+}
+.pick-card:first-child {
+  grid-column: span 2;
+  padding: 16px;
+  background: rgba(255,140,66,0.04);
+  border-color: var(--border-accent);
+}
+.pick-card:first-child .pick-title { font-size: 0.95rem; font-weight: 600; }
+.pick-img {
+  width: 80px; min-height: 56px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; overflow: hidden;
+}
+.pick-meta { display: flex; flex-direction: column; justify-content: center; flex: 1; min-width: 0; }
+.pick-cat {
+  font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.12em;
+  font-weight: 700; margin-bottom: 3px;
+}
+.pick-title {
+  font-size: 0.82rem; font-weight: 500; line-height: 1.35;
+  transition: color 0.2s;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.pick-card:hover .pick-title { color: var(--orange); }
+.pick-source { font-size: 0.65rem; color: var(--text-mute); margin-top: 3px; }
+
+/* ─── ENGLISH STRIP ─── */
+.english-strip {
+  display: flex; align-items: center; gap: 24px;
+  padding: 14px 48px;
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
+}
+.english-strip .label {
+  font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--orange); font-weight: 700; white-space: nowrap;
+  padding: 4px 10px;
+  background: rgba(255,140,66,0.06);
+  border-radius: 4px;
+  border: 1px solid rgba(255,140,66,0.1);
+}
+.english-strip .phrase { font-size: 0.92rem; font-weight: 500; white-space: nowrap; }
+.english-strip .meaning { font-size: 0.78rem; color: var(--text-sub); white-space: nowrap; }
+.english-strip .divider { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
+.english-strip .example {
+  font-size: 0.72rem; color: var(--text-mute); font-style: italic;
+  flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ─── MID SECTION ─── */
+.mid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  border-bottom: 1px solid var(--border);
+}
+.mid-col {
+  padding: 56px 44px;
+  border-right: 1px solid var(--border);
+  min-height: 440px;
+}
+.mid-col:last-child { border-right: none; }
+.mid-col:nth-child(odd) { background: var(--bg); }
+.mid-col:nth-child(even) { background: var(--bg-elevated); }
+
+.section-eyebrow {
+  font-size: 0.55rem; font-weight: 700; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--text-mute); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-eyebrow::before {
+  content: ''; width: 20px; height: 1.5px;
+  background: var(--orange); border-radius: 1px;
+}
+.section-header {
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-weight: 200; letter-spacing: -0.03em; line-height: 1;
+  margin-bottom: 32px; color: var(--text);
+}
+
+/* ─── TOOLS GRID (refined) ─── */
+.tools-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+}
+.tool-tile {
+  border-radius: var(--r); padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  cursor: pointer; text-decoration: none;
+  position: relative; overflow: hidden;
+  transition: all 0.25s var(--ease);
+  border: 1px solid var(--border);
+  min-height: 88px;
+}
+.tool-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.tool-tile .icon { font-size: 1.5rem; line-height: 1; }
+.tool-tile .name { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; }
+.tool-tile .desc { font-size: 0.62rem; opacity: 0.5; font-weight: 300; }
+
+/* Muted tile colors — subtle bg, not rainbow gradients */
+.tile-orange { background: rgba(255,140,66,0.08); color: var(--text); border-color: rgba(255,140,66,0.12); }
+.tile-orange:hover { background: rgba(255,140,66,0.12); }
+.tile-blue { background: rgba(74,158,255,0.06); color: var(--text); border-color: rgba(74,158,255,0.1); }
+.tile-blue:hover { background: rgba(74,158,255,0.1); }
+.tile-green { background: rgba(52,211,153,0.06); color: var(--text); border-color: rgba(52,211,153,0.1); }
+.tile-green:hover { background: rgba(52,211,153,0.1); }
+.tile-purple { background: rgba(167,139,250,0.06); color: var(--text); border-color: rgba(167,139,250,0.1); }
+.tile-purple:hover { background: rgba(167,139,250,0.1); }
+.tile-teal { background: rgba(45,212,191,0.06); color: var(--text); border-color: rgba(45,212,191,0.1); }
+.tile-teal:hover { background: rgba(45,212,191,0.1); }
+.tile-pink { background: rgba(244,114,182,0.06); color: var(--text); border-color: rgba(244,114,182,0.1); }
+.tile-pink:hover { background: rgba(244,114,182,0.1); }
+.tile-dark { background: rgba(255,255,255,0.02); color: var(--text); }
+.tile-dark:hover { background: rgba(255,255,255,0.05); }
+.tile-yellow { background: rgba(251,191,36,0.06); color: var(--text); border-color: rgba(251,191,36,0.1); }
+.tile-yellow:hover { background: rgba(251,191,36,0.1); }
+.tool-tile.wide { grid-column: span 2; }
+
+/* ─── PROJECT CARDS ─── */
+.project-card {
+  display: block; padding: 14px 16px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 10px;
+  margin-bottom: 8px; cursor: pointer; text-decoration: none; color: var(--text);
+  border: 1px solid transparent;
+  transition: all 0.2s var(--ease);
+  position: relative;
+  padding-left: 20px;
+}
+.project-card::before {
+  content: ''; position: absolute; left: 0; top: 12px; bottom: 12px;
+  width: 2px; background: var(--border); border-radius: 1px;
+  transition: background 0.2s;
+}
+.project-card:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--border);
+  transform: translateX(4px);
+}
+.project-card:hover::before { background: var(--orange); }
+.project-card .repo-name { font-size: 0.82rem; font-weight: 600; margin-bottom: 2px; }
+.project-card .repo-desc {
+  font-size: 0.7rem; color: var(--text-sub); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.project-card .repo-time {
+  font-family: var(--mono); font-size: 0.6rem; color: var(--text-mute); margin-top: 4px;
+}
+
+/* ─── NOTICE ─── */
+.notice-card {
+  display: flex; gap: 12px; padding: 14px 16px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 10px; margin-bottom: 8px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+.notice-card:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
+.notice-sender {
+  font-family: var(--mono);
+  font-size: 0.55rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 3px 8px; border-radius: 5px;
+  white-space: nowrap; flex-shrink: 0; height: fit-content;
+}
+.sender-rian { background: rgba(255,140,66,0.08); color: var(--orange); }
+.sender-teo { background: rgba(74,158,255,0.08); color: var(--blue); }
+.sender-hana { background: rgba(45,212,191,0.08); color: var(--teal); }
+.sender-sera { background: rgba(244,114,182,0.08); color: var(--pink); }
+.sender-genie { background: rgba(167,139,250,0.08); color: var(--purple); }
+.notice-body { flex: 1; }
+.notice-body .msg { font-size: 0.78rem; line-height: 1.45; }
+.notice-body .time { font-size: 0.62rem; color: var(--text-mute); margin-top: 4px; }
+
+/* ─── NEWS SECTION ─── */
+.news-section {
+  padding: 72px 56px 88px;
   background: var(--bg-elevated);
-  display:flex; align-items:center; gap: 14px;
 }
-.chat-header .p-avatar { width: 44px; height: 44px; font-size: 15px; }
-.chat-h-title { font-size: 17px; font-weight: 700; letter-spacing:-0.01em; }
-.chat-h-sub { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
-.chat-h-meta { font-size: 10px; color: var(--text-mute); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.12em; padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--r-pill); margin-left: auto; }
+.news-tabs {
+  display: flex; gap: 4px; margin-bottom: 36px;
+  flex-wrap: wrap;
+}
+.news-tab {
+  cursor: pointer; transition: all 0.2s;
+  padding: 8px 16px;
+  font-size: 0.75rem; font-weight: 400; color: var(--text-mute);
+  border-radius: 20px;
+  border: 1px solid transparent;
+  min-height: 44px; display: inline-flex; align-items: center;
+}
+.news-tab:hover { color: var(--text-sub); background: rgba(255,255,255,0.03); }
+.news-tab.active {
+  color: var(--text); font-weight: 500;
+  background: rgba(255,255,255,0.05);
+  border-color: var(--border);
+}
 
-/* welcome */
-.welcome {
-  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding: 40px 24px; text-align:center;
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
 }
-.welcome h2 {
-  font-size: 28px; font-weight:700; letter-spacing:-0.02em;
-  margin-bottom: 12px;
+.news-card {
+  background: var(--bg-card); border-radius: var(--r-lg);
+  overflow: hidden; cursor: pointer;
+  transition: all 0.35s var(--ease);
+  text-decoration: none; color: var(--text);
+  display: flex; flex-direction: column;
+  border: 1px solid var(--border);
 }
-.welcome h2 span { color: var(--orange); }
-.welcome p { color: var(--text-sub); font-size: 14px; line-height: 1.7; max-width: 460px; }
-.welcome .hint { margin-top: 28px; font-size: 11px; color: var(--text-mute); font-family: var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
+.news-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.5);
+  border-color: rgba(255,255,255,0.08);
+}
+.news-card.featured { grid-column: span 2; grid-row: span 2; }
+.news-card:nth-child(4) { grid-column: span 2; }
+.news-card:nth-child(7) { grid-column: span 2; }
 
-/* messages */
-.msgs {
-  flex:1; overflow-y:auto;
-  padding: 24px 28px 16px;
-  display:flex; flex-direction:column; gap: 14px;
+.news-card-img {
+  width: 100%; aspect-ratio: 16/9;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.4rem;
 }
-.msg { max-width: 78%; padding: 12px 16px; border-radius: 14px; font-size: 14.5px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
-.msg.user { align-self: flex-end; background: var(--orange); color: #fff; border-bottom-right-radius: 4px; box-shadow: var(--shadow-sm); }
-.msg.agent { align-self: flex-start; background: var(--bg-card); border: 1px solid var(--border); border-bottom-left-radius: 4px; box-shadow: var(--shadow-sm); }
-.msg.system { align-self: center; background: transparent; color: var(--text-mute); font-size: 12px; font-family: var(--mono); border: 1px dashed var(--border); padding: 8px 14px; }
-.typing { align-self: flex-start; color: var(--text-mute); font-size: 13px; padding: 6px 8px; display:flex; align-items:center; gap: 6px; }
-.typing .d { width:6px; height:6px; border-radius:50%; background: var(--text-mute); animation: bounce 1.2s infinite; }
-.typing .d:nth-child(2) { animation-delay: .15s; } .typing .d:nth-child(3) { animation-delay: .3s; }
-@keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:.3} 40%{transform:translateY(-4px);opacity:1} }
+.news-card.featured .news-card-img { aspect-ratio: 4/3; font-size: 4rem; }
+.news-card-body { padding: 18px 20px; flex: 1; display: flex; flex-direction: column; }
+.news-card .cat-tag {
+  font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.12em;
+  font-weight: 700; margin-bottom: 6px;
+}
+.cat-ai { color: var(--blue); }
+.cat-performance { color: var(--pink); }
+.cat-exhibition { color: var(--teal); }
+.cat-content_ip { color: var(--purple); }
+.cat-design { color: var(--yellow); }
+.cat-grants { color: var(--green); }
+.cat-festival { color: var(--orange); }
+.news-card .title { font-size: 0.88rem; font-weight: 500; line-height: 1.4; margin-bottom: 8px; }
+.news-card.featured .title { font-size: 1.3rem; font-weight: 600; }
+.news-card .excerpt {
+  font-size: 0.75rem; color: var(--text-sub); line-height: 1.5; flex: 1;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.news-card .meta { font-size: 0.62rem; color: var(--text-mute); margin-top: 10px; }
 
-/* input */
-.input-area {
+/* ─── DEADLINES ─── */
+.deadlines-section {
+  padding: 72px 56px;
+  background: var(--bg);
   border-top: 1px solid var(--border);
+}
+.deadlines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 28px;
+}
+.deadline-card {
+  display: flex; flex-direction: column;
+  padding: 20px 22px;
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  transition: all 0.25s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.deadline-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--orange);
+}
+.deadline-card:hover {
+  background: rgba(255,255,255,0.04);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.deadline-card.urgent::before { background: var(--pink); }
+.deadline-card.soon::before { background: var(--yellow); }
+.deadline-card .dday {
+  font-family: var(--mono);
+  font-size: 1.3rem; font-weight: 600; color: var(--orange);
+  letter-spacing: -0.02em;
+}
+.deadline-card.urgent .dday { color: var(--pink); }
+.deadline-card.soon .dday { color: var(--yellow); }
+.deadline-card .title { font-size: 0.88rem; font-weight: 500; margin-top: 6px; line-height: 1.35; }
+.deadline-card .meta {
+  font-size: 0.65rem; color: var(--text-mute); margin-top: 8px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+/* ─── OUTPUTS ─── */
+.outputs-section {
+  padding: 72px 56px;
   background: var(--bg-elevated);
-  padding: 14px 28px 18px;
 }
-.input-row { display:flex; gap: 10px; align-items: flex-end; max-width: 920px; margin: 0 auto; }
-.input-row textarea {
-  flex:1; background: var(--bg-input); border: 1px solid transparent;
-  border-radius: 14px; padding: 12px 16px; font-size: 14.5px; line-height: 1.55;
-  resize: none; outline: none; min-height: 46px; max-height: 140px;
-  transition: all .15s var(--ease);
+.outputs-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-top: 28px;
 }
-.input-row textarea:focus { background: var(--bg-elevated); border-color: var(--accent-line); }
-.input-row textarea::placeholder { color: var(--text-mute); }
-.send-btn {
-  width: 46px; height: 46px; border-radius: 12px; border: none;
-  background: var(--orange); color: #fff; font-size: 15px; cursor: pointer;
-  display:flex; align-items:center; justify-content:center;
-  transition: all .15s var(--ease); flex-shrink: 0;
+.output-tile {
+  aspect-ratio: 1/1; border-radius: var(--r); overflow: hidden;
+  background: var(--bg-card); cursor: pointer;
+  position: relative; transition: all 0.25s var(--ease);
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
 }
-.send-btn:hover:not(:disabled) { background: var(--deep-orange); transform: translateY(-1px); }
-.send-btn:disabled { background: #DCD8D2; cursor: not-allowed; }
-.input-hint { max-width: 920px; margin: 8px auto 0; font-size: 11px; color: var(--text-mute); font-family: var(--mono); letter-spacing: 0.04em; }
+.output-tile:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  border-color: rgba(255,255,255,0.08);
+}
+.output-tile img { width: 100%; height: 100%; object-fit: cover; }
+.output-tile .placeholder { font-size: 2rem; color: var(--text-mute); font-weight: 100; }
+.output-tile .label {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 8px 10px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  font-size: 0.6rem; color: var(--text);
+  opacity: 0; transition: opacity 0.25s;
+  letter-spacing: 0.04em;
+}
+.output-tile:hover .label { opacity: 1; }
 
-/* ===== Modal — API key ===== */
-.modal-bg {
-  position: fixed; inset:0; background: rgba(20,18,15,0.4);
-  display:none; align-items:center; justify-content:center; z-index: 100;
-  padding: 20px;
+/* ─── FLIPBOOK ─── */
+.flipbook-section {
+  padding: 72px 56px 96px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
 }
-.modal-bg.show { display:flex; }
-.modal {
-  background: var(--bg-elevated); border-radius: var(--r-lg);
-  max-width: 480px; width: 100%;
-  box-shadow: var(--shadow-lg);
-  padding: 28px;
+.flipbook-stage {
+  margin-top: 32px;
+  perspective: 2400px;
+  display: flex; justify-content: center;
 }
-.modal h3 { font-size: 18px; font-weight: 700; letter-spacing:-0.01em; margin-bottom: 4px; }
-.modal-sub { font-size: 13px; color: var(--text-sub); margin-bottom: 18px; line-height: 1.6; }
-.modal label { display:block; font-size: 11px; font-weight:600; letter-spacing: 0.1em; color: var(--text-mute); font-family: var(--mono); text-transform: uppercase; margin-bottom: 6px; }
-.modal input {
-  width: 100%; padding: 12px 14px; background: var(--bg-input);
-  border: 1px solid transparent; border-radius: 10px; font-size: 13px;
-  font-family: var(--mono); outline: none;
+.flipbook {
+  position: relative;
+  width: min(880px, 90vw);
+  height: 460px;
+  transform-style: preserve-3d;
 }
-.modal input:focus { background: var(--bg-elevated); border-color: var(--accent-line); }
-.modal-actions { display:flex; gap: 8px; margin-top: 18px; justify-content: flex-end; }
-.modal-btn { padding: 10px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-elevated); cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s var(--ease); }
-.modal-btn:hover { background: var(--bg-card-hover); }
-.modal-btn.primary { background: var(--orange); color: #fff; border-color: var(--orange); }
-.modal-btn.primary:hover { background: var(--deep-orange); border-color: var(--deep-orange); }
-.modal-note { font-size: 11px; color: var(--text-mute); margin-top: 12px; line-height: 1.6; padding: 10px 12px; background: var(--bg-input); border-radius: 8px; }
+.flip-page {
+  position: absolute; inset: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 40px 48px;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transition: transform 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+  backface-visibility: hidden;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.flip-page.flipped { transform: rotateY(-180deg); }
+.flip-page::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 14px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.3), transparent);
+  pointer-events: none;
+}
+.flip-page-num {
+  position: absolute; right: 28px; bottom: 20px;
+  font-family: var(--mono);
+  font-size: 0.6rem; color: var(--text-mute); letter-spacing: 0.16em;
+}
+.flip-page h3 {
+  font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.22em;
+  color: var(--orange); font-weight: 700; margin-bottom: 20px;
+}
+.flip-page .quote {
+  font-size: 1.5rem; font-weight: 200; line-height: 1.45; color: var(--text);
+  margin-bottom: 24px; flex: 1;
+}
+.flip-page .attribution { font-size: 0.78rem; color: var(--text-sub); font-weight: 300; }
+.flip-controls {
+  display: flex; gap: 12px; justify-content: center; margin-top: 28px;
+}
+.flip-btn {
+  padding: 10px 22px; min-height: 44px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  color: var(--text-sub);
+  font-family: inherit; font-size: 0.75rem; font-weight: 400;
+  cursor: pointer; transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+.flip-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  border-color: rgba(255,255,255,0.1);
+}
+.flip-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.flip-progress {
+  display: flex; gap: 6px; align-items: center;
+  font-family: var(--mono);
+  font-size: 0.68rem; color: var(--text-mute);
+  padding: 8px 14px;
+}
 
-/* ===== Mobile ===== */
-@media (max-width: 720px) {
-  .shell { grid-template-columns: 1fr; }
-  .aside { display: none; position: fixed; left:0; top:56px; bottom:0; width: 280px; z-index: 30; transform: translateX(-100%); transition: transform .25s var(--ease); }
-  .aside.show { display: block; transform: translateX(0); box-shadow: var(--shadow-lg); }
-  .menu-btn { display:flex !important; }
-  .chat-h-meta { display:none; }
-  .input-area { padding: 12px 14px 14px; }
-  .msgs { padding: 18px 14px 12px; }
-  .msg { max-width: 88%; font-size: 14px; }
-  .chat-header { padding: 14px 16px; }
+/* ─── FOOTER ─── */
+.footer {
+  padding: 40px 56px 52px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
 }
-.menu-btn { display: none; width: 38px; height: 38px; align-items:center; justify-content:center; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; cursor:pointer; }
+.footer-brand {
+  font-size: 0.65rem; letter-spacing: 0.22em; font-weight: 700;
+  color: var(--text-mute);
+}
+.footer-meta {
+  font-family: var(--mono);
+  font-size: 0.6rem; color: var(--text-mute);
+  letter-spacing: 0.04em;
+}
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 24px; text-align: center; grid-column: 1 / -1;
+}
+.empty-state .empty-icon { font-size: 2rem; margin-bottom: 12px; opacity: 0.2; }
+.empty-state .empty-msg { font-size: 0.78rem; color: var(--text-mute); margin-bottom: 14px; }
+.empty-state .empty-btn {
+  padding: 8px 20px; border-radius: 20px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03); color: var(--text-sub); font-size: 0.75rem;
+  font-family: inherit; cursor: pointer; transition: all 0.2s;
+}
+.empty-state .empty-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero-eyebrow, .hero-time, .hero-date, .hero-greeting, .hero-weather {
+  animation: fadeInUp 0.7s var(--ease) both;
+}
+.hero-eyebrow { animation-delay: 0s; }
+.hero-time { animation-delay: 0.06s; }
+.hero-date { animation-delay: 0.12s; }
+.hero-greeting { animation-delay: 0.16s; }
+.hero-weather { animation-delay: 0.22s; }
+.hero-right-label { animation: fadeInUp 0.6s var(--ease) 0.1s both; }
+
+/* ─── SCROLL REVEAL (= 디폴트 = 보임, 옛 observer = 단순화) ─── */
+.reveal {
+  opacity: 1; transform: translateY(0);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+}
+.reveal.hidden { opacity: 0; transform: translateY(24px); }
+
+/* ═══ RESPONSIVE ═══ */
+
+/* Tablet landscape */
+@media (min-width: 901px) and (max-width: 1200px) {
+  .hero { grid-template-columns: 1fr 1fr; }
+  .hero-left { padding: 56px 36px 48px 44px; }
+  .hero-right { padding: 48px 32px 40px 28px; }
+  .hero-time { font-size: 5.5rem; }
+  .mid { grid-template-columns: 1fr 1fr; }
+  .mid-col:nth-child(3) { grid-column: span 2; }
+  .news-grid { grid-template-columns: repeat(2, 1fr); }
+  .news-card:nth-child(4), .news-card:nth-child(7) { grid-column: span 2; }
+  .outputs-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Tablet portrait / small laptop */
+@media (max-width: 900px) {
+  .nav { padding: 0 20px; overflow-x: auto; scrollbar-width: none; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-search { display: none; }
+
+  .hero { grid-template-columns: 1fr; min-height: auto; }
+  .hero-left { padding: 80px 28px 36px; }
+  .hero-right { padding: 32px 28px; border-left: none; border-top: 1px solid var(--border); }
+  .hero-time { font-size: 4.5rem; }
+  .pick-list { grid-template-columns: 1fr; }
+  .pick-card:first-child { grid-column: span 1; }
+
+  .english-strip {
+    flex-direction: column; gap: 6px; padding: 14px 28px; align-items: flex-start;
+  }
+  .english-strip .example, .english-strip .phrase, .english-strip .meaning { white-space: normal; }
+  .english-strip .divider { display: none; }
+
+  .mid { grid-template-columns: 1fr; }
+  .mid-col {
+    border-right: none; border-bottom: 1px solid var(--border);
+    padding: 44px 28px; min-height: auto;
+  }
+
+  .news-section, .deadlines-section, .outputs-section, .flipbook-section { padding: 48px 24px; }
+  .news-grid { grid-template-columns: 1fr; }
+  .news-card.featured, .news-card:nth-child(4), .news-card:nth-child(7) { grid-column: span 1; grid-row: span 1; }
+
+  .outputs-grid { grid-template-columns: repeat(3, 1fr); }
+  .flipbook { height: 340px; width: 92vw; }
+  .flip-page { padding: 28px 32px; }
+  .flip-page .quote { font-size: 1.1rem; }
+
+  .section-header { font-size: 2.2rem; }
+  .footer { padding: 32px 24px; }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .hero-left { padding: 72px 20px 28px; }
+  .hero-right { padding: 28px 20px; }
+  .hero-time { font-size: 3.5rem; }
+  .hero-time::after { width: 40px; height: 2px; }
+  .hero-date { font-size: 0.9rem; }
+  .hero-eyebrow { font-size: 0.52rem; }
+
+  .english-strip { padding: 12px 20px; }
+  .mid-col { padding: 36px 20px; }
+  .tools-grid { gap: 6px; }
+  .tool-tile { padding: 14px; min-height: 76px; }
+  .tool-tile .icon { font-size: 1.3rem; }
+  .tool-tile .name { font-size: 0.7rem; }
+
+  .news-section, .deadlines-section, .outputs-section, .flipbook-section { padding: 40px 16px; }
+  .section-header { font-size: 1.8rem; }
+  .deadlines-grid { grid-template-columns: 1fr; }
+  .outputs-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .flipbook { height: 280px; }
+  .flip-page { padding: 20px 24px; }
+  .flip-page .quote { font-size: 0.95rem; }
+  .flip-controls { gap: 8px; }
+  .flip-btn { padding: 8px 16px; font-size: 0.7rem; }
+
+  .footer { padding: 24px 16px; flex-direction: column; align-items: flex-start; }
+}
 </style>
 </head>
 <body>
 
-<!-- Top bar -->
-<div class="topbar">
-  <button class="menu-btn" id="menuBtn" aria-label="메뉴">☰</button>
-  <a class="brand" href="./" aria-label="홈으로">
-    <span class="dot"></span>
-    <span>SUNNY <span style="color:var(--orange);font-weight:700">·</span> TEAM</span>
-  </a>
-  <span class="brand-label">11 personas</span>
-  <span class="spacer"></span>
-  <button class="key-btn" id="keyBtn" title="Anthropic API 키 설정">
-    <span id="keyIcon">🔑</span>
-    <span id="keyLabel">키 설정</span>
-  </button>
-  <a class="back-home" href="./">← 홈</a>
+<a class="skip-link" href="#main-content">본문 바로가기</a>
+
+<!-- NAV -->
+<nav class="nav" role="navigation" aria-label="메인 네비게이션">
+  <span class="nav-logo">SUNNY</span>
+  <span class="nav-item active" data-section="hero" role="button" tabindex="0" aria-label="Today 섹션으로 이동">Today</span>
+  <span class="nav-item" data-section="team-section" role="button" tabindex="0" aria-label="Team 섹션으로 이동" style="color:var(--orange);font-weight:600">Team</span>
+  <span class="nav-item" data-section="news-section" role="button" tabindex="0" aria-label="News 섹션으로 이동">News</span>
+  <span class="nav-item" data-section="deadlines-section" role="button" tabindex="0" aria-label="Deadlines 섹션으로 이동">Deadlines</span>
+  <span class="nav-spacer"></span>
+  <div class="nav-search">
+    <span style="color:var(--text-mute);font-size:0.78rem">&#128269;</span>
+    <input type="text" placeholder="Search..." id="searchInput" aria-label="Google 검색">
+  </div>
+</nav>
+
+<main class="main" id="main-content">
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero" id="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow" id="greeting">Good morning, Sunny</div>
+      <div class="hero-time" id="timeDisplay">--:--</div>
+      <div class="hero-date" id="dateDisplay"></div>
+      <div class="hero-weather">
+        <span style="font-size:1.2rem">&#9925;</span>
+        <span class="temp" id="weatherTemp">--&deg;</span>
+        <span class="desc" id="weatherDesc">Loading...</span>
+      </div>
+
+      <!-- English (= 시간 밑 통합, 옛 English Strip에서 이동) -->
+      <div class="hero-english">
+        <span class="he-label">Business English</span>
+        <span class="he-phrase" id="engPhrase">"Let's circle back on that."</span>
+        <span class="he-meaning" id="engMeaning">그 건은 나중에 다시 논의하죠.</span>
+        <span class="he-example" id="engExample">We're running out of time — let's circle back on the budget issue after lunch.</span>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-right-label">News Pick</div>
+      <div class="pick-list" id="newsPick"></div>
+    </div>
+  </section>
+
+
+  <!-- ═══ MID ═══ (★ col1 = Team / col2 = Tools / col3 = Projects) -->
+  <section class="mid reveal" id="mid">
+    <div class="mid-col" id="team-section">
+      <div style="display:flex; align-items:baseline; gap:10px;">
+        <div class="section-eyebrow">12 Personas · BYOK</div>
+      </div>
+      <div class="section-header">Team</div>
+      <div class="team-quick" id="teamQuick"></div>
+      <button class="team-key-btn-mini" id="teamKeyBtn" type="button">
+        <span id="teamKeyIcon">🔑</span>
+        <span id="teamKeyLabel">API 키 설정</span>
+      </button>
+    </div>
+    <div class="mid-col">
+      <div class="section-eyebrow">In Progress</div>
+      <div class="section-header">진행 중</div>
+      <div class="in-progress-list" id="inProgressList"></div>
+    </div>
+    <div class="mid-col">
+      <div class="section-eyebrow">GitHub</div>
+      <div class="section-header">Recent Projects</div>
+      <div id="projectsList">
+        <div style="color:var(--text-mute);font-size:0.78rem;">Loading...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ QUICK LINKS ═══ (자주 가는 사이트 · 옛 Tools 대체) -->
+  <section class="quick-links-section reveal" id="quick-links-section" style="padding: 56px 56px 64px; max-width: 1400px; margin: 0 auto;">
+    <div class="section-eyebrow">Bookmarks</div>
+    <div class="section-header">Quick Links</div>
+    <div class="quick-links-grid" id="quickLinksGrid"></div>
+  </section>
+
+  <!-- ═══ ACTIVITY ═══ (Team Activity · 옛 mid col3에서 분리) -->
+  <section class="activity-section reveal" id="activity-section" style="padding: 0 56px 40px; max-width: 1400px; margin: 0 auto;">
+    <div class="section-eyebrow">Team Activity</div>
+    <div class="section-header">Recent</div>
+    <div id="noticeList"></div>
+  </section>
+
+  <!-- ═══ NEWS ═══ -->
+  <section class="news-section reveal" id="news-section">
+    <div class="section-eyebrow">Daily Digest</div>
+    <div class="section-header">News</div>
+    <div class="news-tabs" id="newsTabs">
+      <span class="news-tab active" data-cat="all">All</span>
+      <span class="news-tab" data-cat="ai">AI</span>
+      <span class="news-tab" data-cat="performance">공연</span>
+      <span class="news-tab" data-cat="exhibition">전시</span>
+      <span class="news-tab" data-cat="content_ip">콘텐츠IP</span>
+      <span class="news-tab" data-cat="design">디자인</span>
+      <span class="news-tab" data-cat="grants">지원사업</span>
+      <span class="news-tab" data-cat="festival">페스티벌</span>
+    </div>
+    <div class="news-grid" id="newsGrid"></div>
+  </section>
+
+  <!-- ═══ DEADLINES ═══ -->
+  <section class="deadlines-section reveal" id="deadlines-section">
+    <div class="section-eyebrow">Upcoming</div>
+    <div class="section-header">This Week</div>
+    <div style="color:var(--text-mute);font-size:0.78rem;margin-top:-22px;margin-bottom:4px;">지원사업 · 납품 · 계약 · 마감</div>
+    <div class="deadlines-grid" id="deadlinesGrid"></div>
+  </section>
+
+  <!-- ═══ OUTPUTS ═══ -->
+  <section class="outputs-section reveal" id="outputs-section">
+    <div class="section-eyebrow">Visual Maker</div>
+    <div class="section-header">Recent Outputs</div>
+    <div class="outputs-grid" id="outputsGrid"></div>
+  </section>
+
+  <!-- ═══ FLIPBOOK ═══ -->
+  <section class="flipbook-section reveal" id="flipbook-section">
+    <div class="section-eyebrow">Hana's Curation</div>
+    <div class="section-header">Daily Pages</div>
+    <div class="flipbook-stage">
+      <div class="flipbook" id="flipbook"></div>
+    </div>
+    <div class="flip-controls">
+      <button class="flip-btn" id="flipPrev" aria-label="이전 페이지">&larr; Prev</button>
+      <div class="flip-progress" id="flipProgress">1 / 1</div>
+      <button class="flip-btn" id="flipNext" aria-label="다음 페이지">Next &rarr;</button>
+    </div>
+  </section>
+
+
+  <style>
+  /* Team quick (mid col1) — 3컬럼 카드 그리드 */
+  .team-quick {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .tq-item {
+    display: flex; flex-direction: column;
+    align-items: center; text-align: center;
+    padding: 12px 6px 11px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--bg-elevated);
+    cursor: pointer;
+    transition: all 0.15s var(--ease);
+    gap: 5px;
+  }
+  .tq-item:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-line);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  .tq-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    object-fit: cover; flex-shrink: 0;
+    border: 1.5px solid #fff;
+    box-shadow: 0 1px 4px rgba(20,18,15,0.06);
+    margin-bottom: 2px;
+  }
+  .tq-info { width: 100%; min-width: 0; }
+  .tq-name { font-size: 0.78rem; font-weight: 700; letter-spacing: -0.005em; }
+  .tq-en { display: block; font-size: 0.54rem; color: var(--text-mute); font-family: var(--mono); margin-left: 0; margin-top: 2px; letter-spacing: 0.1em; font-weight: 600; opacity: 0.6; }
+  .tq-role { font-size: 0.65rem; color: var(--text-sub); white-space: normal; line-height: 1.25; margin-top: 4px; }
+  .tq-co { display: inline-block; font-size: 0.55rem; font-family: var(--mono); letter-spacing: 0.06em; padding: 2px 6px; border-radius: 999px; margin-top: 5px; }
+
+  /* ★ Outputs·Flipbook 섹션 = 숨김 (= 대표님 2026-05-11 "디스 위크 아래 다 지우자") */
+  #outputs-section, #flipbook-section { display: none !important; }
+
+  /* ★ 섹션 박스 (= 위아래 구분, 2026-05-11 대표님 명시) */
+  .mid,
+  .news-section,
+  .deadlines-section,
+  .outputs-section,
+  .flipbook-section,
+  .activity-section {
+    max-width: 1400px !important;
+    margin: 24px auto !important;
+    padding: 32px 36px !important;
+    background: var(--bg-elevated) !important;
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+  }
+  .mid { display: grid; grid-template-columns: 1.05fr 1fr 1fr; gap: 28px; }
+  body { background: var(--bg); }
+  main { padding-bottom: 40px; }
+  /* hero·english은 그대로 (배경 X = 통째 베이지) */
+  @media (max-width: 980px) {
+    .mid { grid-template-columns: 1fr; gap: 24px; }
+    .mid, .news-section, .deadlines-section, .outputs-section, .flipbook-section, .activity-section {
+      margin: 16px 12px !important; padding: 24px 20px !important;
+    }
+  }
+
+  /* News text list (= 이미지 X, 대표님 2026-05-11 명시) */
+  #newsPick, #newsGrid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    grid-template-columns: none !important;
+  }
+  .news-text-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none; color: inherit;
+    transition: background 0.12s var(--ease);
+  }
+  .news-text-item:hover { background: var(--bg-card-hover); }
+  .news-text-item:last-child { border-bottom: none; }
+  .nti-cat {
+    font-size: 0.55rem; font-family: var(--mono); font-weight: 700;
+    letter-spacing: 0.08em; padding: 3px 8px;
+    border-radius: 999px;
+    flex-shrink: 0; text-transform: uppercase;
+    min-width: 60px; text-align: center;
+  }
+  .nti-cat.cat-ai          { background: #DBEAFE; color: #1E40AF; }
+  .nti-cat.cat-content_ip  { background: #F3E8FF; color: #7C3AED; }
+  .nti-cat.cat-performance { background: #FCE7F3; color: #BE185D; }
+  .nti-cat.cat-exhibition  { background: #CCFBF1; color: #0F766E; }
+  .nti-cat.cat-grants      { background: #DCFCE7; color: #15803D; }
+  .nti-cat.cat-design      { background: #FEF3C7; color: #92400E; }
+  .nti-cat.cat-festival    { background: var(--orange-soft); color: var(--deep-orange); }
+  .nti-title {
+    flex: 1; font-size: 0.84rem; font-weight: 500;
+    line-height: 1.45; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .nti-source {
+    font-size: 0.65rem; color: var(--text-mute);
+    flex-shrink: 0; font-family: var(--mono);
+    letter-spacing: 0.02em; max-width: 180px;
+    text-align: right;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  @media (max-width: 720px) {
+    .nti-source { display: none; }
+    .nti-cat { min-width: 50px; font-size: 0.5rem; padding: 2px 6px; }
+  }
+
+  /* Recent Projects (mid col3) */
+  #projectsList { display: flex; flex-direction: column; gap: 7px; }
+  .pj-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--bg-elevated);
+    transition: all 0.12s var(--ease);
+    text-decoration: none;
+    color: inherit;
+  }
+  .pj-item:hover { border-color: var(--orange); background: var(--bg-card-hover); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .pj-icon { font-size: 1.1rem; color: var(--orange); flex-shrink: 0; width: 24px; text-align: center; }
+  .pj-body { flex: 1; min-width: 0; }
+  .pj-name { font-size: 0.82rem; font-weight: 600; letter-spacing: -0.005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pj-host { font-size: 0.62rem; color: var(--text-mute); font-family: var(--mono); letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .pj-dead { opacity: 0.55; }
+  .pj-dead .pj-name::after { content: ' ✗'; color: #DC2626; font-weight: 700; }
+
+  /* In Progress (mid col2) */
+  .in-progress-list { display: flex; flex-direction: column; gap: 8px; }
+  .ip-item {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-elevated);
+    transition: all 0.12s var(--ease);
+  }
+  .ip-item:hover { border-color: var(--accent-line); box-shadow: var(--shadow-sm); }
+  .ip-row1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .ip-name { font-size: 0.84rem; font-weight: 600; letter-spacing: -0.005em; line-height: 1.3; }
+  .ip-state {
+    font-size: 0.52rem; font-family: var(--mono); font-weight: 700;
+    letter-spacing: 0.08em; padding: 3px 8px;
+    border-radius: 999px; text-transform: uppercase; flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .ip-state-active, .ip-state-live { background: #DCFCE7; color: #15803D; }
+  .ip-state-in-dev, .ip-state-develop, .ip-state-setup { background: var(--orange-soft); color: var(--deep-orange); }
+  .ip-state-pending { background: #FEF3C7; color: #92400E; }
+  .ip-state-today { background: #DBEAFE; color: #1E40AF; }
+  .ip-state-opportunity { background: #F3E8FF; color: #7C3AED; }
+  .ip-state-watch { background: #F1F5F9; color: var(--text-mute); }
+  .ip-row2 { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .ip-co { font-size: 0.6rem; color: var(--text-mute); font-family: var(--mono); letter-spacing: 0.04em; flex-shrink: 0; }
+  .ip-note { font-size: 0.7rem; color: var(--text-sub); flex: 1; line-height: 1.45; }
+  .team-key-btn-mini {
+    padding: 9px 14px;
+    background: var(--bg-card-hover);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 0.7rem; font-family: var(--mono); letter-spacing: 0.04em;
+    color: var(--text-sub);
+    display: flex; align-items: center; gap: 6px;
+    width: 100%; justify-content: center;
+    transition: all 0.15s var(--ease);
+  }
+  .team-key-btn-mini:hover { border-color: var(--orange); color: var(--orange); background: var(--bg-elevated); }
+  .team-key-btn-mini.has-key { background: var(--orange-soft); border-color: var(--border-accent); color: var(--deep-orange); }
+
+  /* Recent Chats (mid col2) */
+  .recent-chats { display:flex; flex-direction:column; gap: 6px; max-height: 460px; overflow-y: auto; }
+  .recent-chats::-webkit-scrollbar { width: 4px; }
+  .recent-chats::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+  .rc-item {
+    display:flex; gap: 11px; padding: 10px 12px;
+    background: var(--bg-card-hover); border: 1px solid transparent; border-radius: 10px;
+    cursor:pointer; transition: all 0.15s var(--ease);
+  }
+  .rc-item:hover { background: var(--bg-elevated); border-color: var(--border-accent); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .rc-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1.5px solid #fff; }
+  .rc-body { flex:1; min-width: 0; }
+  .rc-line1 { display:flex; align-items:center; gap: 6px; }
+  .rc-name { font-size: 0.78rem; font-weight: 600; }
+  .rc-time { font-size: 0.6rem; color: var(--text-mute); font-family: var(--mono); margin-left: auto; }
+  .rc-preview { font-size: 0.7rem; color: var(--text-sub); line-height: 1.4; margin-top: 2px;
+    overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+
+  /* Quick Links */
+  .quick-links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .ql-tile {
+    display:flex; align-items:center; gap: 11px;
+    padding: 14px 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border); border-radius: 11px;
+    text-decoration: none; color: var(--text);
+    transition: all 0.18s var(--ease);
+    box-shadow: var(--shadow-sm);
+  }
+  .ql-tile:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-accent);
+    box-shadow: var(--shadow-md);
+  }
+  .ql-icon { font-size: 1.3rem; line-height: 1; flex-shrink: 0; width: 30px; text-align: center; }
+  .ql-body { flex:1; min-width: 0; }
+  .ql-name { font-size: 0.82rem; font-weight: 600; letter-spacing: -0.005em; }
+  .ql-host { font-size: 0.62rem; color: var(--text-mute); font-family: var(--mono); margin-top: 1px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* Team grid (옛 풀세트 — 사용 X but CSS 보존) */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .persona-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 18px 16px;
+    cursor: pointer;
+    transition: all 0.18s var(--ease);
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+  }
+  .persona-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-accent);
+  }
+  .persona-card .pc-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    overflow: hidden; margin-bottom: 12px;
+    background: var(--bg-card-hover);
+    box-shadow: 0 2px 8px rgba(20,18,15,0.08);
+    border: 2px solid #fff;
+  }
+  .persona-card .pc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .persona-card .pc-name { font-size: 0.95rem; font-weight: 700; letter-spacing:-0.01em; }
+  .persona-card .pc-en { font-size: 0.62rem; color: var(--text-mute); font-family: var(--mono); letter-spacing: 0.1em; margin: 2px 0 6px; }
+  .persona-card .pc-role { font-size: 0.72rem; color: var(--text-sub); line-height: 1.4; }
+  .persona-card .pc-co { position: absolute; top: 10px; right: 10px; font-size: 0.55rem; padding: 3px 8px; border-radius: 999px; font-family: var(--mono); letter-spacing: 0.06em; }
+  .team-key-bar {
+    display:flex; align-items:center; gap: 14px;
+    padding: 16px 20px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--r);
+  }
+  .team-key-btn {
+    display:flex; align-items:center; gap: 8px;
+    padding: 9px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-pill);
+    cursor:pointer; font-family: var(--mono); font-size: 0.72rem; color: var(--text-sub);
+    transition: all 0.15s var(--ease);
+  }
+  .team-key-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .team-key-btn.has-key { background: var(--orange-soft); border-color: var(--border-accent); color: var(--deep-orange); }
+  .team-key-hint { font-size: 0.7rem; color: var(--text-mute); font-family: var(--mono); }
+
+  .team-body.collapsed { display:none; }
+
+  /* Persona modal (chat) */
+  .pm-bg { position: fixed; inset:0; background: rgba(20,18,15,0.42); display:none; align-items:center; justify-content:center; z-index: 300; padding: 0; }
+  .pm-bg.show { display:flex; }
+  .pm-box {
+    background: var(--bg-elevated);
+    width: 100%; max-width: 880px; height: 92vh; max-height: 760px;
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg);
+    display:flex; flex-direction:column; overflow:hidden;
+    margin: 16px;
+  }
+  .pm-header {
+    padding: 18px 24px; border-bottom: 1px solid var(--border);
+    display:flex; align-items:center; gap: 14px;
+    background: var(--bg-elevated);
+  }
+  .pm-header .pc-avatar { width: 44px; height: 44px; border-radius: 50%; overflow:hidden; flex-shrink:0; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(20,18,15,0.08); }
+  .pm-header .pc-avatar img { width:100%; height:100%; object-fit:cover; }
+  .pm-htitle { font-size: 1rem; font-weight: 700; letter-spacing:-0.01em; }
+  .pm-hsub { font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; }
+  .pm-close { margin-left:auto; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); cursor:pointer; font-size: 16px; color: var(--text-sub); transition: all 0.15s var(--ease); }
+  .pm-close:hover { background: var(--bg-card-hover); color: var(--text); }
+  .pm-msgs { flex:1; overflow-y:auto; padding: 20px 24px 12px; display:flex; flex-direction:column; gap: 12px; background: var(--bg); }
+  .pm-msg { max-width: 80%; padding: 11px 15px; border-radius: 13px; font-size: 0.92rem; line-height: 1.62; white-space: pre-wrap; word-break: break-word; }
+  .pm-msg.user { align-self:flex-end; background: var(--orange); color: #fff; border-bottom-right-radius: 4px; }
+  .pm-msg.agent { align-self:flex-start; background: var(--bg-elevated); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .pm-msg.sys { align-self:center; background: transparent; color: var(--text-mute); font-size: 0.74rem; font-family: var(--mono); border: 1px dashed var(--border); padding: 6px 12px; max-width: 92%; text-align: center; }
+  .pm-typing { align-self:flex-start; color: var(--text-mute); font-size: 0.78rem; padding: 4px 8px; }
+  .pm-input-area { padding: 14px 20px 16px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+  .pm-input-row { display:flex; gap: 10px; align-items: flex-end; }
+  .pm-input-row textarea { flex:1; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 11px 14px; font-size: 0.9rem; line-height: 1.5; resize:none; outline:none; min-height: 44px; max-height: 130px; transition: all 0.15s var(--ease); color: var(--text); font-family: var(--font); }
+  .pm-input-row textarea:focus { border-color: var(--border-accent); }
+  .pm-send { width: 44px; height: 44px; border-radius: 11px; border:none; background: var(--orange); color:#fff; font-size: 15px; cursor:pointer; transition: all 0.15s var(--ease); flex-shrink:0; }
+  .pm-send:hover:not(:disabled) { background: var(--deep-orange); }
+  .pm-send:disabled { background: #DCD8D2; cursor:not-allowed; }
+  .pm-input-hint { font-size: 0.66rem; color: var(--text-mute); font-family: var(--mono); margin-top: 6px; letter-spacing: 0.04em; }
+
+  /* Key modal */
+  .key-modal-bg { position: fixed; inset:0; background: rgba(20,18,15,0.42); display:none; align-items:center; justify-content:center; z-index: 400; padding: 20px; }
+  .key-modal-bg.show { display:flex; }
+  .key-modal { background: var(--bg-elevated); border-radius: var(--r-lg); max-width: 480px; width:100%; padding: 26px; box-shadow: var(--shadow-lg); }
+  .key-modal h3 { font-size: 1.1rem; font-weight: 700; letter-spacing:-0.01em; margin-bottom: 6px; }
+  .key-modal .km-sub { font-size: 0.78rem; color: var(--text-sub); margin-bottom: 18px; line-height: 1.65; }
+  .key-modal label { display:block; font-size: 0.62rem; font-weight:600; letter-spacing: 0.12em; color: var(--text-mute); font-family: var(--mono); text-transform: uppercase; margin-bottom: 6px; }
+  .key-modal input { width:100%; padding: 11px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; font-size: 0.78rem; font-family: var(--mono); outline:none; color: var(--text); }
+  .key-modal input:focus { border-color: var(--border-accent); }
+  .key-actions { display:flex; gap:8px; margin-top: 18px; justify-content: flex-end; }
+  .key-btn-m { padding: 9px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-elevated); cursor:pointer; font-size: 0.78rem; font-weight: 500; }
+  .key-btn-m:hover { background: var(--bg-card-hover); }
+  .key-btn-m.primary { background: var(--orange); color:#fff; border-color: var(--orange); }
+  .key-btn-m.primary:hover { background: var(--deep-orange); border-color: var(--deep-orange); }
+  .key-note { font-size: 0.7rem; color: var(--text-mute); margin-top: 12px; line-height: 1.6; padding: 10px 12px; background: var(--bg); border-radius: 8px; }
+
+  @media (max-width: 720px) {
+    .team-section { padding: 40px 20px 60px !important; }
+    .team-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .persona-card { padding: 14px 10px; }
+    .persona-card .pc-avatar { width: 54px; height: 54px; }
+    .pm-box { height: 100vh; max-height: 100vh; margin: 0; border-radius: 0; }
+    .pm-msg { max-width: 90%; font-size: 0.88rem; }
+  }
+  </style>
+
+  <footer class="footer">
+    <div class="footer-brand">SUNNY HOME</div>
+    <div class="footer-meta" id="buildMeta">build · loading...</div>
+  </footer>
+</main>
+
+<!-- Persona chat modal -->
+<div class="pm-bg" id="personaModal" role="dialog" aria-modal="true">
+  <div class="pm-box" id="pmBox"></div>
 </div>
 
-<div class="shell">
-
-  <!-- Sidebar -->
-  <aside class="aside" id="aside">
-    <div class="aside-section">
-      <div class="aside-label">에이전시 5팀</div>
-      <div id="agencyList"></div>
-    </div>
-    <div class="aside-section">
-      <div class="aside-label">4사 팀장</div>
-      <div id="companyList"></div>
-    </div>
-    <div class="aside-section">
-      <div class="aside-label">개인 비서</div>
-      <div id="genieList"></div>
-    </div>
-  </aside>
-
-  <!-- Main -->
-  <main class="main" id="main">
-    <div class="welcome" id="welcome">
-      <h2>안녕, <span>대표님</span></h2>
-      <p>왼쪽에서 페르소나를 선택해서 직접 일을 시킬 수 있습니다. 각 페르소나는 자기 분야의 누적 노하우를 바탕으로 응답합니다.</p>
-      <div class="hint">11 PERSONAS · BYOK · LOCAL HISTORY</div>
-    </div>
-  </main>
-
-</div>
-
-<!-- API Key Modal -->
-<div class="modal-bg" id="keyModal">
-  <div class="modal">
+<!-- API Key modal -->
+<div class="key-modal-bg" id="keyModalBg">
+  <div class="key-modal">
     <h3>Anthropic API 키 설정</h3>
-    <p class="modal-sub">대표님 본인 키로 = Anthropic API 직접 호출. 키는 = 이 브라우저 localStorage에만 저장 = 서버 전송 X.</p>
+    <p class="km-sub">대표님 본인 키로 = Anthropic API 직접 호출 (BYOK). 키 = 이 브라우저 localStorage에만 저장 = 서버 전송 X.</p>
     <label for="apiKeyInput">API Key</label>
     <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
-    <div class="modal-note">
-      <strong>BYOK (Bring Your Own Key)</strong> = 글로벌 룰 16번 정공법. 본인 키 = 본인 차감.<br>
+    <div class="key-note">
       • console.anthropic.com에서 발급<br>
-      • 키 = 브라우저에만 저장 = 다른 PC 사용 시 다시 입력 필요<br>
-      • 키 삭제 = 키 설정 → 빈 값 저장
+      • 본인 키 = 본인 차감 (= 글로벌 룰 16 BYOK)<br>
+      • 키 삭제 = 빈 값 저장
     </div>
-    <div class="modal-actions">
-      <button class="modal-btn" onclick="closeKeyModal()">취소</button>
-      <button class="modal-btn primary" onclick="saveKey()">저장</button>
+    <div class="key-actions">
+      <button class="key-btn-m" type="button" onclick="closeKeyModal()">취소</button>
+      <button class="key-btn-m primary" type="button" onclick="saveApiKey()">저장</button>
     </div>
   </div>
 </div>
 
 <script>
-// ===== Personas =====
-const PERSONAS = [
-  // 에이전시 5팀
-  { id:'lumi',  name:'루미', en:'LUMI', role:'콘텐츠 PD', group:'agency', color:'#FBBF24',
-    sys:'당신은 SUNNY TEAM 루미(LUMI), 콘텐츠 프로덕션 PD. IP 발굴·AI 영상·시리즈 기획·시나리오 디렉팅. 대표님 30년 베테랑 CD·VFX 감독. 호칭 "대표님". "박다" 표현 금지(저장·기록·반영·추가 사용). 한국어. 미사여구 X. 풍부히. 모르면 "확인 필요" 정직히.' },
-  { id:'sori',  name:'소리', en:'SORI', role:'시나리오 작가', group:'agency', color:'#E879F9',
-    sys:'당신은 SUNNY TEAM 소리(SORI), 시나리오 작가. 트리트먼트·캐릭터·대사·humanizer. AI스러운 표현 체크리스트(번역투 X, 격언체 X, 관념어 X). 4사 IP 글쓰기. 호칭 "대표님". "박다" 금지. 한국어. 모르면 "확인 필요" 정직히.' },
-  { id:'maru',  name:'마루', en:'MARU', role:'마케팅', group:'agency', color:'#38BDF8',
-    sys:'당신은 SUNNY TEAM 마루(MARU), 마케팅. 제안서·보도자료·SNS·영업·이메일. 자기자랑 X. 기획 중심. 설득 톤. 상대방 모른다 가정. 호칭 "대표님". "박다" 금지. 한국어.' },
-  { id:'rian',  name:'리안', en:'RIAN', role:'디자인', group:'agency', color:'#FF6B9D',
-    sys:'당신은 SUNNY TEAM 리안(RIAN), 디자인. PPT·웹·UI·로고·CI/BI. 대표님 30년 디자인·VFX 베이스 = 후진 디자인 절대 X. 안티 템플릿. 슬라이드당 1메시지. Pretendard 필수. 디자인 시스템 v1 17부 의무(특히 13부 AI 슬롭 체크리스트). 다크 모드 자동 디폴트 X = 밝은 톤 디폴트. 호칭 "대표님". "박다" 금지.' },
-  { id:'teo',   name:'테오', en:'TEO',  role:'기술·개발', group:'agency', color:'#34D399',
-    sys:'당신은 SUNNY TEAM 테오(TEO), 기술·개발. 앱·웹·API·서버(Oracle Cloud)·자동화. GitHub nextsunny-ai. GitHub Pages·Vercel·Supabase. 먼저 동작하는 코드. HTML base64 내장. 기존 버전 오버라이트 X. 호칭 "대표님". "박다" 금지.' },
-  { id:'hana',  name:'하나', en:'HANA', role:'회계·법무·세무', group:'agency', color:'#FB923C',
-    sys:'당신은 SUNNY TEAM 하나(HANA), 회계·법무·세무(변호사·법무사·변리사·회계사 역할). 4사 회계·재무·법무·세무·미수금 L1~L5·사기 방지·계약서 1차 검토. 대표님 = 계약서 안 쓰고 일하다 사기당한 이력 = 계약서 없으면 경고. 호칭 "대표님". "박다" 금지.' },
-  // 4사 팀장
-  { id:'sera',  name:'세라', en:'SERA', role:'써니엔터 팀장', group:'company', color:'#FF6B9D',
-    sys:'당신은 SUNNY TEAM 세라(SERA), 써니엔터테인먼트 전담 팀장. 써니엔터 = 대표님 1순위(=대표님 살리기). 조선요괴전 체험전시 성공(예매율 2위·해외투어 협의 중·마리오아울렛 입점 제안), 귀문봉인기(고양산업진흥원 제출), PERO(아동애니 10부·KOCCA·EBS 제출). 직원: 맹성인 이사·김화령 본부장. 미션: AI 콘텐츠 컴퍼니 리브랜딩. 호칭 "대표님". "박다" 금지.' },
-  { id:'nea',   name:'네아', en:'NEA',  role:'넥스트아트 팀장', group:'company', color:'#6C63FF',
-    sys:'당신은 SUNNY TEAM 네아(NEA), 넥스트아트 팀장. 써니+김태훈 대표 2인 체제, 둘 다 VFX 감독 출신. 서울링 프로젝트(상암동 대관람차, 시행사 리츠, 예탁 중) 모니터링. 현재: 외주+지원사업+AI 콘텐츠 제작. KOCCA AI 콘텐츠 서류통과, Back to Mythology 고양산업진흥원 제출 완료. 호칭 "대표님". "박다" 금지.' },
-  { id:'mori',  name:'모리', en:'MORI', role:'굿즈모먼트 팀장', group:'company', color:'#3DDAB4',
-    sys:'당신은 SUNNY TEAM 모리(MORI), 굿즈모먼트 팀장. 국내 최초 웹툰 굿즈 백화점(연남동 4층). 써니 지분 40%, 공동대표. 현장 판매·수급 안 건드림. 성장 전략: 온라인몰·글로벌 팝업·투자유치·업무자동화. 전지적독자시점 팝업 전회 매진. 화산귀환 팝업 4/23~5/5. 브랜드: 민트 #3DDAB4. 호칭 "대표님". "박다" 금지.' },
-  { id:'birch', name:'버치', en:'BIRCH',role:'버치사운드 팀장', group:'company', color:'#FF3B30',
-    sys:'당신은 SUNNY TEAM 버치(BIRCH), 버치사운드(Birch Sound Global Pte. Ltd.) 팀장. 대표 김한수. 대표님 = 외부 CD(연봉). 글로벌 뮤직 페스티벌. NORY CITY 페스티벌 = 확정 X 디벨롭 중(2026-05-11). Han 대표 한국어 Brand Bible 수정본이 = 필립 영문 Creative Bible 위 최종. RAUKH(호흡) 백스테이지 철학 + 35~55 Anchor + 18~33 Active 이중 관객 + 진사·쪽·황토 한국 안료 톤 + NORY BELL 528Hz + 3-Track(Singapore Flagship 2027 May W2 + IP Licensing + Media Art Exhibition). 호칭 "대표님". "박다" 금지. "확정" 톤 X = "현재 제안 / 디벨롭 중".' },
-  // 개인 비서
-  { id:'genie', name:'지니', en:'GENIE',role:'대표님 개인 비서', group:'genie', color:'#34D399',
-    sys:'당신은 SUNNY TEAM 지니(GENIE), 대표님 개인 비서. 일정·메일·뉴스·건강·자기개발·영어·브랜딩·개인 재무. 텔레그램 단일 창구. 자동 분배·총괄 X = 대표님 명시한 페르소나에게만 라우팅. 모르는 건 모른다고. 호칭 "대표님". "박다" 금지.' },
+// ═══ TIME & DATE ═══
+function updateTime() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('timeDisplay').textContent = h + ':' + m;
+
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('dateDisplay').textContent =
+    days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+
+  const hour = now.getHours();
+  let greet = 'Good evening, Sunny';
+  if (hour < 6) greet = 'Still up, Sunny?';
+  else if (hour < 12) greet = 'Good morning, Sunny';
+  else if (hour < 18) greet = 'Good afternoon, Sunny';
+  document.getElementById('greeting').textContent = greet;
+}
+updateTime();
+setInterval(updateTime, 30000);
+
+// ═══ WEATHER ═══
+document.getElementById('weatherTemp').innerHTML = '18&deg;';
+document.getElementById('weatherDesc').textContent = 'Seoul, partly cloudy';
+
+// ═══ BUSINESS ENGLISH ═══
+const defaultEnglish = [
+  { phrase: "Let's circle back on that.", meaning: "그 건은 나중에 다시 논의하죠.", example: "We're running out of time — let's circle back on the budget issue after lunch." },
+  { phrase: "I'll loop you in.", meaning: "당신도 포함시킬게요.", example: "I'll loop you in on the email thread so you have full context." },
+  { phrase: "Let's table this for now.", meaning: "이건 일단 보류합시다.", example: "We're behind schedule — let's table this for now and revisit next week." },
+  { phrase: "Can you walk me through it?", meaning: "하나하나 설명해 주실 수 있나요?", example: "I read the proposal, but can you walk me through the budget section?" },
+  { phrase: "We need to align on this.", meaning: "이 부분에 대해 의견을 맞춰야 합니다.", example: "Before the board meeting, we need to align on our growth projections." }
 ];
 
-const COMMON_CTX = `
-[SUNNY 공통 정보]
-대표: 유희정(Sunny Ryu), 30년 경력 크리에이티브 디렉터, 대한민국 최초 여성 VFX 감독, 국무총리 훈장.
-운영 회사: 써니엔터(대표 100%), 넥스트아트(공동운영 40%), 굿즈모먼트(공동대표 40%), 버치사운드(외부 CD 연봉).
-우선순위: 1.써니엔터 살리기 2.다른 회사 일 빨리 끝내기 3.패시브 인컴 구조.
-디자인: Pretendard 폰트 필수. 다크 모드 자동 디폴트 X. 디자인 시스템 마스터 v1 17부 의무. 디자인 후진 거 절대 불가.
-호칭 = "대표님" / "박다" 표현 금지 / 거짓말 금지(모르면 모른다고).
+// ═══ SEARCH ═══
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    window.open('https://www.google.com/search?q=' + encodeURIComponent(e.target.value.trim()), '_blank');
+    e.target.value = '';
+  }
+});
+
+// ═══ NAV ═══
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const sec = document.getElementById(item.dataset.section);
+    if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+    document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+    item.classList.add('active');
+  });
+  item.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); }
+  });
+});
+
+// ═══ SUNNY TEAM ═══
+// 순서: 1.지니 비서 → 2~5.4사 팀장 → 6.테오·7.리안 (★ 자주) → 8~11.에이전시 → 12.카이
+const TEAM = [
+  { id:'genie', name:'지니', en:'GENIE',role:'대표님 개인 비서',        co:'비서실',    avatar:'avatars/genie.jfif', color:'#34D399',
+    sys:'당신은 SUNNY TEAM 지니(GENIE), 대표님 개인 비서. 일정·메일·뉴스·건강·자기개발·영어·브랜딩·개인 재무. 텔레그램 단일 창구. 자동 분배·총괄 X = 명시한 페르소나만 라우팅. 호칭 "대표님". "박다" 금지.' },
+  { id:'sera',  name:'세라', en:'SERA', role:'써니엔터 팀장',          co:'써니엔터',  avatar:'avatars/sera.png',   color:'#FF6B9D',
+    sys:'당신은 SUNNY TEAM 세라(SERA), 써니엔터테인먼트 팀장. 대표님 1순위 회사(= 살리기). 조선요괴전·귀문봉인기·PERO. 직원: 맹성인·김화령. AI 콘텐츠 컴퍼니 리브랜딩 미션. 호칭 "대표님". "박다" 금지.' },
+  { id:'nea',   name:'네아', en:'NEA',  role:'넥스트아트 팀장',         co:'넥스트아트', avatar:'avatars/nea.jfif',   color:'#6C63FF',
+    sys:'당신은 SUNNY TEAM 네아(NEA), 넥스트아트 팀장. 써니+김태훈 2인 체제(VFX 감독 출신). 서울링 모니터링. 외주·지원사업·AI 콘텐츠. 호칭 "대표님". "박다" 금지.' },
+  { id:'mori',  name:'모리', en:'MORI', role:'굿즈모먼트 팀장',         co:'굿즈모먼트', avatar:'avatars/mori.jfif',  color:'#3DDAB4',
+    sys:'당신은 SUNNY TEAM 모리(MORI), 굿즈모먼트 팀장. 국내 최초 웹툰 굿즈 백화점(연남동 4층). 지분 40%·공동대표. 현장 안 건드림 = 성장 전략(온라인몰·글로벌 팝업·투자유치). 화산귀환·전지적독자시점 팝업. 브랜드 민트 #3DDAB4. 호칭 "대표님". "박다" 금지.' },
+  { id:'birch', name:'버치', en:'BIRCH',role:'버치사운드 팀장',         co:'버치사운드', avatar:'avatars/birch.jfif', color:'#FF3B30',
+    sys:'당신은 SUNNY TEAM 버치(BIRCH), 버치사운드(Birch Sound Global Pte. Ltd.) 팀장. 대표 김한수. 대표님 = 외부 CD(연봉). NORY CITY 페스티벌 = 확정 X 디벨롭 중. Han 한국어 Brand Bible 수정본이 = 필립 영문 Creative Bible 위 최종. RAUKH(호흡) 백스테이지 철학 + 35~55 Anchor + 18~33 Active + 진사·쪽·황토 + NORY BELL 528Hz + Singapore 2027 May Flagship. 호칭 "대표님". "박다" 금지. "확정" 톤 X.' },
+  { id:'teo',   name:'테오', en:'TEO',  role:'기술·개발',            co:'에이전시',  avatar:'avatars/teo.jfif',   color:'#34D399',
+    sys:'당신은 SUNNY TEAM 테오(TEO), 기술·개발. 앱·웹·API·서버(Oracle Cloud)·자동화. GitHub nextsunny-ai. 먼저 동작하는 코드. 기존 버전 오버라이트 X. 호칭 "대표님". "박다" 금지.' },
+  { id:'rian',  name:'리안', en:'RIAN', role:'디자인',              co:'에이전시',  avatar:'avatars/rian.jfif',  color:'#FF6B9D',
+    sys:'당신은 SUNNY TEAM 리안(RIAN), 디자인. PPT·웹·UI·로고·CI/BI. 대표님 30년 디자인·VFX 베이스 = 후진 디자인 절대 X. 안티 템플릿. 슬라이드당 1메시지. Pretendard 필수. 디자인 시스템 v1 17부 의무. 다크 모드 자동 디폴트 X = 밝은 톤 디폴트. 호칭 "대표님". "박다" 금지.' },
+  { id:'lumi',  name:'루미', en:'LUMI', role:'콘텐츠 PD',           co:'에이전시',  avatar:'avatars/lumi.jfif',  color:'#FBBF24',
+    sys:'당신은 SUNNY TEAM 루미(LUMI), 콘텐츠 프로덕션 PD. IP 발굴·AI 영상·시리즈 기획·시나리오 디렉팅. 호칭 "대표님". "박다" 금지. 한국어. 미사여구 X. 풍부히.' },
+  { id:'sori',  name:'소리', en:'SORI', role:'시나리오 작가',         co:'에이전시',  avatar:'avatars/sori.jpeg',  color:'#E879F9',
+    sys:'당신은 SUNNY TEAM 소리(SORI), 시나리오 작가. 트리트먼트·캐릭터·대사·humanizer. AI스러운 표현 체크리스트(번역투 X, 격언체 X, 관념어 X). 호칭 "대표님". "박다" 금지. 한국어.' },
+  { id:'maru',  name:'마루', en:'MARU', role:'마케팅',              co:'에이전시',  avatar:'avatars/maru.jfif',  color:'#38BDF8',
+    sys:'당신은 SUNNY TEAM 마루(MARU), 마케팅. 제안서·보도자료·SNS·영업·이메일. 자기자랑 X. 기획 중심. 설득 톤. 호칭 "대표님". "박다" 금지.' },
+  { id:'hana',  name:'하나', en:'HANA', role:'회계·법무·세무',         co:'에이전시',  avatar:'avatars/hana.png',   color:'#FB923C',
+    sys:'당신은 SUNNY TEAM 하나(HANA), 회계·법무·세무(변호사·법무사·변리사·회계사). 4사 회계·재무·법무·세무·미수금·사기 방지·계약서 1차 검토. 대표님 = 계약서 없이 일하다 사기당한 이력 = 경고. 호칭 "대표님". "박다" 금지.' },
+  { id:'kai',   name:'카이', en:'KAI',  role:'게임 디렉터',           co:'게임',     avatar:'avatars/kai.jpg',    color:'#A78BFA',
+    sys:'당신은 SUNNY TEAM 카이(KAI), 12번째 페르소나 = 게임 디렉터 (2026-05-11 신설). Phaser·Godot 풀스택. 코드·디자인·사운드·시나리오·출시 = 1인 책임. 협업 매트릭스 X = 단독 풀스택. 디자인 시스템 v1 [15부 게임] 의무. 호칭 "대표님". "박다" 금지.' },
+];
+
+// 진행 중 프로젝트 (= mid col2)
+const IN_PROGRESS = [
+  { name: '써니홈 통합', co: '시스템', state: 'Today', note: '오늘 = 페르소나 채팅 통합 + 라이트 톤 리디자인' },
+  { name: '카이 게임 디렉터 셋업', co: '게임', state: 'Setup', note: '오늘 아침 = 맥서버 시킴 / 저녁 보고' },
+  { name: 'NORY CITY 브랜딩', co: '버치사운드', state: 'Develop', note: 'v7→v8 = Han 한국어 Brand Bible 수정 진행' },
+  { name: 'KOCCA 신기술영상', co: '버치사운드', state: 'Pending', note: '4/14 최종제출 = 결과 대기 (최대 2.2억)' },
+  { name: '조선요괴전', co: '써니엔터', state: 'Live', note: '체험전시 + 해외투어 협의 + 마리오아울렛' },
+  { name: '화산귀환 팝업', co: '굿즈모먼트', state: 'Live', note: '4/23~5/5' },
+  { name: '스토리메이커 V2.11.2', co: '에이전시', state: 'Active', note: '작가 BYOK + Tauri .exe 출시' },
+  { name: 'AI PRONOTE', co: '에이전시', state: 'In Dev', note: '회의록 + 받아쓰기 + AI 비서 통합' },
+  { name: 'Phenomenon JV', co: '버치사운드', state: 'Opportunity', note: 'HYBE·SM·JYP·YG 합작 = 2027.12 = 사운드 브랜딩 진입' },
+  { name: '서울링', co: '넥스트아트', state: 'Watch', note: '상암동 대관람차 = 시행사 리츠 = 예탁 (모니터링)' },
+];
+
+function renderInProgress() {
+  const g = document.getElementById('inProgressList');
+  if(!g) return;
+  g.innerHTML = IN_PROGRESS.map(p => `
+    <div class="ip-item">
+      <div class="ip-row1">
+        <span class="ip-name">${p.name}</span>
+        <span class="ip-state ip-state-${p.state.toLowerCase().replace(/\s/g,'-')}">${p.state}</span>
+      </div>
+      <div class="ip-row2">
+        <span class="ip-co">${p.co}</span>
+        <span class="ip-note">${p.note}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+const TEAM_COMMON = `
+[SUNNY 공통]
+대표: 유희정(Sunny Ryu), 30년 CD, 한국 최초 여성 VFX 감독.
+운영: 써니엔터(대표 100%), 넥스트아트(공동 40%), 굿즈모먼트(공동 40%), 버치사운드(외부 CD).
+우선순위: 1.써니엔터 살리기 2.다른 회사 빨리 3.패시브 인컴.
+디자인: Pretendard 필수. 다크 자동 디폴트 X. 후진 디자인 X.
+호칭 "대표님" / "박다" 금지 / 모르면 모른다고 정직히.
 `;
 
-// ===== State =====
-let currentPersona = null;
-const history = {}; // {personaId: [{role, content}]}
 const LS_KEY = 'sunny_team_apikey';
 const LS_HIST = 'sunny_team_history';
+const teamHist = {};
+let currentTeamPersona = null;
 
-function loadHistory() {
-  try { const h = localStorage.getItem(LS_HIST); if(h) Object.assign(history, JSON.parse(h)); } catch(e){}
-}
-function saveHistory() {
-  try { localStorage.setItem(LS_HIST, JSON.stringify(history)); } catch(e){}
-}
-function getKey() { return localStorage.getItem(LS_KEY) || ''; }
-function setKey(k) { if(k) localStorage.setItem(LS_KEY, k); else localStorage.removeItem(LS_KEY); updateKeyBtn(); }
-function updateKeyBtn() {
-  const btn = document.getElementById('keyBtn');
-  const lbl = document.getElementById('keyLabel');
-  const ico = document.getElementById('keyIcon');
-  if(getKey()) { btn.classList.add('has-key'); lbl.textContent = '키 저장됨'; ico.textContent = '✓'; }
-  else { btn.classList.remove('has-key'); lbl.textContent = '키 설정'; ico.textContent = '🔑'; }
-}
-
-// ===== Render sidebar =====
-function avatarBg(color) { return color; }
-function avatarInitial(p) { return p.name.charAt(0); }
-function renderSidebar() {
-  const groups = { agency: 'agencyList', company: 'companyList', genie: 'genieList' };
-  Object.keys(groups).forEach(g => {
-    const ul = document.getElementById(groups[g]);
-    ul.innerHTML = PERSONAS.filter(p => p.group === g).map(p => `
-      <div class="persona-item" data-id="${p.id}" onclick="selectPersona('${p.id}')">
-        <div class="p-avatar" style="background:${p.color}">${avatarInitial(p)}</div>
-        <div class="p-info">
-          <div class="p-name">${p.name} <span style="font-size:10px;color:var(--text-mute);font-family:var(--mono);font-weight:500">${p.en}</span></div>
-          <div class="p-role">${p.role}</div>
-        </div>
-      </div>
-    `).join('');
-  });
+function loadTeamHist() { try { const h = localStorage.getItem(LS_HIST); if(h) Object.assign(teamHist, JSON.parse(h)); } catch(e){} }
+function saveTeamHist() { try { localStorage.setItem(LS_HIST, JSON.stringify(teamHist)); } catch(e){} }
+function getApiKey() { return localStorage.getItem(LS_KEY) || ''; }
+function setApiKey(k) { if(k) localStorage.setItem(LS_KEY, k); else localStorage.removeItem(LS_KEY); updateKeyBtnUI(); }
+function updateKeyBtnUI() {
+  const b = document.getElementById('teamKeyBtn');
+  const l = document.getElementById('teamKeyLabel');
+  const i = document.getElementById('teamKeyIcon');
+  if(!b) return;
+  if(getApiKey()) { b.classList.add('has-key'); l.textContent = '키 저장됨'; i.textContent = '✓'; }
+  else { b.classList.remove('has-key'); l.textContent = 'API 키 설정'; i.textContent = '🔑'; }
 }
 
-function selectPersona(id) {
-  const p = PERSONAS.find(x => x.id === id);
-  if(!p) return;
-  currentPersona = p;
-  document.querySelectorAll('.persona-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
-  if(window.innerWidth <= 720) document.getElementById('aside').classList.remove('show');
-  renderChat();
-}
-
-function renderChat() {
-  const p = currentPersona;
-  const main = document.getElementById('main');
-  if(!p) { main.innerHTML = ''; return; }
-  const msgs = (history[p.id] || []);
-  main.innerHTML = `
-    <div class="chat-header">
-      <div class="p-avatar" style="background:${p.color}">${avatarInitial(p)}</div>
-      <div>
-        <div class="chat-h-title">${p.name} <span style="font-family:var(--mono);font-size:11px;color:var(--text-mute);font-weight:500;letter-spacing:0.08em;margin-left:4px">${p.en}</span></div>
-        <div class="chat-h-sub">${p.role}</div>
-      </div>
-      <span class="chat-h-meta">CLAUDE SONNET</span>
+function renderTeamGrid() {
+  const g = document.getElementById('teamGrid');
+  if(!g) return;
+  g.innerHTML = TEAM.map(p => `
+    <div class="persona-card" onclick="openPersonaModal('${p.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPersonaModal('${p.id}')}">
+      <div class="pc-avatar"><img src="${p.avatar}" alt="${p.name}"></div>
+      <div class="pc-name">${p.name}</div>
+      <div class="pc-en">${p.en}</div>
+      <div class="pc-role">${p.role}</div>
+      <span class="pc-co" style="background:${p.color}22;color:${p.color}">${p.co}</span>
     </div>
-    <div class="msgs" id="msgs">${
-      msgs.length === 0
-        ? `<div class="msg system">${p.name}와 대화 시작. 본인 ANTHROPIC_API_KEY 박혀있어야 호출 가능.</div>`
-        : msgs.map(m => `<div class="msg ${m.role === 'user' ? 'user' : 'agent'}">${escapeHtml(m.content)}</div>`).join('')
-    }</div>
-    <div class="input-area">
-      <div class="input-row">
-        <textarea id="inp" placeholder="${p.name}에게 말하기..." rows="1" onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
-        <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="보내기 (Enter)">↑</button>
+  `).join('');
+}
+
+function renderRecentChats() {
+  const c = document.getElementById('recentChats');
+  if(!c) return;
+  const items = [];
+  for(const pid in teamHist) {
+    const hist = teamHist[pid];
+    if(!hist || hist.length === 0) continue;
+    const persona = TEAM.find(p => p.id === pid);
+    if(!persona) continue;
+    const lastMsg = hist[hist.length - 1];
+    items.push({ persona, lastMsg, count: hist.length });
+  }
+  if(items.length === 0) {
+    c.innerHTML = `<div style="color:var(--text-mute);font-size:0.78rem;padding:12px 4px;line-height:1.6;">아직 대화 없음<br><span style="font-size:0.7rem;">← 왼쪽 Team에서 페르소나 선택</span></div>`;
+    return;
+  }
+  // 최근 = 마지막 메시지 기준 sort = 단순 = order 그대로
+  items.reverse();
+  c.innerHTML = items.slice(0, 8).map(({persona:p, lastMsg, count}) => `
+    <div class="rc-item" onclick="openPersonaModal('${p.id}')" role="button" tabindex="0">
+      <img class="rc-avatar" src="${p.avatar}" alt="${p.name}" onerror="this.outerHTML='<div class=&quot;rc-avatar&quot; style=&quot;background:${p.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px&quot;>${p.name.charAt(0)}</div>'">
+      <div class="rc-body">
+        <div class="rc-line1">
+          <span class="rc-name">${p.name}</span>
+          <span class="rc-time">${count}턴</span>
+        </div>
+        <div class="rc-preview">${escapeHtml(lastMsg.content).slice(0, 110)}</div>
       </div>
-      <div class="input-hint">Enter 보내기 · Shift+Enter 줄바꿈 · 본인 키로 직접 호출 (BYOK)</div>
+    </div>
+  `).join('');
+}
+
+// 자주 가는 사이트 (= 도구만)
+const QUICK_LINKS = [
+  { name: 'Claude.ai',          host: 'claude.ai',                icon: '✦',  url: 'https://claude.ai' },
+  { name: 'Anthropic Console',  host: 'console.anthropic.com',    icon: '⚙',  url: 'https://console.anthropic.com' },
+  { name: 'GitHub (nextsunny)', host: 'github.com/nextsunny-ai',  icon: '⌨',  url: 'https://github.com/nextsunny-ai' },
+  { name: 'Vercel',             host: 'vercel.com',               icon: '▲',  url: 'https://vercel.com/dashboard' },
+  { name: 'Oracle Cloud',       host: 'cloud.oracle.com',         icon: '☁',  url: 'https://cloud.oracle.com' },
+  { name: 'Supabase',           host: 'supabase.com',             icon: '⚡', url: 'https://supabase.com/dashboard' },
+  { name: 'Google Drive',       host: 'drive.google.com',         icon: '◆',  url: 'https://drive.google.com' },
+  { name: 'Gmail',              host: 'gmail.com',                icon: '✉',  url: 'https://mail.google.com' },
+  { name: 'Calendar',           host: 'calendar.google.com',      icon: '📅', url: 'https://calendar.google.com' },
+  { name: 'KOCCA',              host: 'kocca.kr',                 icon: '◆',  url: 'https://www.kocca.kr' },
+  { name: 'KOFIC',              host: 'kofic.or.kr',              icon: '◆',  url: 'https://www.kofic.or.kr' },
+  { name: 'Notion',             host: 'notion.so',                icon: '✎',  url: 'https://notion.so' },
+];
+
+// 완성한 프로젝트 URL (= mid col3 = Recent Projects)
+const PROJECTS = [
+  { name: '써니홈 (개인)',       host: 'nextsunny-ai.github.io/sunny-home', icon: '★',  url: 'https://nextsunny-ai.github.io/sunny-home/' },
+  { name: '스토리메이커',         host: 'story.sunnytoon.com',      icon: '✎',  url: 'https://story.sunnytoon.com' },
+  { name: 'Visual Maker',       host: 'visual.sunnytoon.com',     icon: '◇',  url: 'https://visual.sunnytoon.com' },
+  { name: 'ComfyUI',            host: 'comfy.sunnytoon.com',      icon: '◈',  url: 'https://comfy.sunnytoon.com' },
+  { name: '굿즈모먼트 홈',        host: 'goodsmoment-preview',      icon: '◉',  url: 'https://nextsunny-ai.github.io/goodsmoment-preview/' },
+  { name: '버치사운드 ERP',       host: 'birchsound-erp',           icon: '◎',  url: 'https://nextsunny-ai.github.io/birchsound-erp/' },
+  { name: '넥스트아트 홈',        host: 'nextart-home',             icon: '◐',  url: 'https://nextsunny-ai.github.io/nextart-home/' },
+  { name: '써니팀 (옛 = wrapper 죽음)', host: 'team.sunnytoon.com', icon: '◐',  url: 'https://team.sunnytoon.com', dead: true },
+];
+
+function renderProjects() {
+  const g = document.getElementById('projectsList');
+  if(!g) return;
+  g.innerHTML = PROJECTS.map(p => `
+    <a class="pj-item${p.dead ? ' pj-dead' : ''}" href="${p.url}" target="_blank" rel="noopener" title="${p.name} — ${p.host}">
+      <span class="pj-icon">${p.icon}</span>
+      <div class="pj-body">
+        <div class="pj-name">${p.name}</div>
+        <div class="pj-host">${p.host}</div>
+      </div>
+    </a>
+  `).join('');
+}
+
+function renderQuickLinks() {
+  const g = document.getElementById('quickLinksGrid');
+  if(!g) return;
+  g.innerHTML = QUICK_LINKS.map(l => `
+    <a class="ql-tile" href="${l.url}" target="_blank" rel="noopener" title="${l.name} — ${l.host}">
+      <span class="ql-icon">${l.icon}</span>
+      <div class="ql-body">
+        <div class="ql-name">${l.name}</div>
+        <div class="ql-host">${l.host}</div>
+      </div>
+    </a>
+  `).join('');
+}
+
+function renderTeamQuick() {
+  const g = document.getElementById('teamQuick');
+  if(!g) return;
+  g.innerHTML = TEAM.map(p => `
+    <div class="tq-item" onclick="openPersonaModal('${p.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPersonaModal('${p.id}')}">
+      <img src="${p.avatar}" alt="${p.name}" class="tq-avatar" onerror="this.style.background='${p.color}';this.style.padding='0';this.outerHTML='<div class=&quot;tq-avatar&quot; style=&quot;background:${p.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px&quot;>${p.name.charAt(0)}</div>'">
+      <div class="tq-info">
+        <div class="tq-name">${p.name}<span class="tq-en">${p.en}</span></div>
+        <div class="tq-role">${p.role}</div>
+      </div>
+      <span class="tq-co" style="background:${p.color}1a;color:${p.color}">${p.co}</span>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function openPersonaModal(id) {
+  const p = TEAM.find(x => x.id === id);
+  if(!p) return;
+  currentTeamPersona = p;
+  const msgs = teamHist[id] || [];
+  const box = document.getElementById('pmBox');
+  box.innerHTML = `
+    <div class="pm-header">
+      <div class="pc-avatar"><img src="${p.avatar}" alt="${p.name}"></div>
+      <div>
+        <div class="pm-htitle">${p.name} <span style="font-family:var(--mono);font-size:0.66rem;color:var(--text-mute);font-weight:500;letter-spacing:0.08em;margin-left:4px">${p.en}</span></div>
+        <div class="pm-hsub">${p.role} · ${p.co}</div>
+      </div>
+      <button class="pm-close" type="button" onclick="closePersonaModal()" aria-label="닫기">✕</button>
+    </div>
+    <div class="pm-msgs" id="pmMsgs">${
+      msgs.length === 0
+        ? `<div class="pm-msg sys">${p.name}와 대화 시작. 본인 ANTHROPIC_API_KEY 필요.</div>`
+        : msgs.map(m => `<div class="pm-msg ${m.role==='user'?'user':'agent'}">${escapeHtml(m.content)}</div>`).join('')
+    }</div>
+    <div class="pm-input-area">
+      <div class="pm-input-row">
+        <textarea id="pmInp" placeholder="${p.name}에게 말하기..." rows="1" onkeydown="pmHandleKey(event)" oninput="pmAutoGrow(this)"></textarea>
+        <button class="pm-send" id="pmSend" type="button" onclick="pmSend()">↑</button>
+      </div>
+      <div class="pm-input-hint">Enter 보내기 · Shift+Enter 줄바꿈 · BYOK · ${getApiKey()?'키 저장됨':'키 미설정 → 먼저 키 설정 필요'}</div>
     </div>
   `;
-  const inp = document.getElementById('inp');
-  if(inp) inp.focus();
-  scrollBottom();
+  document.getElementById('personaModal').classList.add('show');
+  setTimeout(() => { const i = document.getElementById('pmInp'); if(i) i.focus(); }, 50);
+}
+function closePersonaModal() { document.getElementById('personaModal').classList.remove('show'); currentTeamPersona = null; }
+function pmHandleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();pmSend();} }
+function pmAutoGrow(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,130)+'px'; }
+function pmScrollBottom() { const c=document.getElementById('pmMsgs'); if(c)c.scrollTop=c.scrollHeight; }
+function pmAppendMsg(role, text) {
+  const c = document.getElementById('pmMsgs'); if(!c) return;
+  const d = document.createElement('div'); d.className = 'pm-msg ' + (role==='user'?'user':'agent'); d.textContent = text;
+  c.appendChild(d); pmScrollBottom();
 }
 
-function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function scrollBottom() { const c = document.getElementById('msgs'); if(c) c.scrollTop = c.scrollHeight; }
-function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 140) + 'px'; }
-function handleKey(e) { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
-
-async function sendMessage() {
-  if(!currentPersona) return;
-  const inp = document.getElementById('inp');
-  const text = inp.value.trim();
-  if(!text) return;
-
-  const apiKey = getKey();
+async function pmSend() {
+  if(!currentTeamPersona) return;
+  const inp = document.getElementById('pmInp');
+  const t = inp.value.trim(); if(!t) return;
+  const apiKey = getApiKey();
   if(!apiKey) { openKeyModal(); return; }
-
-  inp.value = ''; autoGrow(inp);
-  history[currentPersona.id] = history[currentPersona.id] || [];
-  history[currentPersona.id].push({role:'user', content: text});
-  saveHistory();
-  appendMsg('user', text);
-
-  const sendBtn = document.getElementById('sendBtn');
-  sendBtn.disabled = true;
-
-  const msgs = document.getElementById('msgs');
-  const ty = document.createElement('div');
-  ty.className = 'typing';
-  ty.innerHTML = `${currentPersona.name} 생각 중 <span class="d"></span><span class="d"></span><span class="d"></span>`;
-  msgs.appendChild(ty); scrollBottom();
-
+  inp.value=''; pmAutoGrow(inp);
+  teamHist[currentTeamPersona.id] = teamHist[currentTeamPersona.id] || [];
+  teamHist[currentTeamPersona.id].push({role:'user', content: t});
+  saveTeamHist();
+  pmAppendMsg('user', t);
+  const sendBtn = document.getElementById('pmSend'); sendBtn.disabled = true;
+  const msgs = document.getElementById('pmMsgs');
+  const ty = document.createElement('div'); ty.className = 'pm-typing'; ty.id='pmTyping';
+  ty.textContent = currentTeamPersona.name + ' 생각 중...';
+  msgs.appendChild(ty); pmScrollBottom();
   try {
-    const reply = await callClaude(apiKey, currentPersona, history[currentPersona.id]);
-    ty.remove();
-    history[currentPersona.id].push({role:'assistant', content: reply});
-    saveHistory();
-    appendMsg('agent', reply);
+    const reply = await callAnthropic(apiKey, currentTeamPersona, teamHist[currentTeamPersona.id]);
+    document.getElementById('pmTyping')?.remove();
+    teamHist[currentTeamPersona.id].push({role:'assistant', content: reply});
+    saveTeamHist();
+    pmAppendMsg('agent', reply);
   } catch(e) {
-    ty.remove();
-    appendMsg('agent', `⚠️ 호출 실패: ${e.message}\n\n키 확인 → console.anthropic.com에서 발급한 sk-ant-... 키 박혔는지 확인`);
-  } finally {
-    sendBtn.disabled = false;
-  }
+    document.getElementById('pmTyping')?.remove();
+    pmAppendMsg('agent', `⚠️ 호출 실패: ${e.message}\n\nconsole.anthropic.com에서 발급한 sk-ant-... 키 확인.`);
+  } finally { sendBtn.disabled = false; }
 }
 
-function appendMsg(role, text) {
-  const c = document.getElementById('msgs');
-  if(!c) return;
-  const d = document.createElement('div');
-  d.className = 'msg ' + (role === 'user' ? 'user' : 'agent');
-  d.textContent = text;
-  c.appendChild(d); scrollBottom();
-}
-
-async function callClaude(apiKey, persona, hist) {
-  const systemPrompt = COMMON_CTX + '\n\n' + persona.sys;
+async function callAnthropic(apiKey, persona, hist) {
+  const systemPrompt = TEAM_COMMON + '\n\n' + persona.sys;
   const messages = hist.slice(-20).map(m => ({role: m.role, content: m.content}));
+  // OAuth (sk-ant-oat01-...) = Bearer + anthropic-beta / API key (sk-ant-api03-...) = x-api-key
+  const isOAuth = apiKey.startsWith('sk-ant-oat');
+  const headers = {
+    'Content-Type': 'application/json',
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  };
+  if (isOAuth) {
+    headers['Authorization'] = 'Bearer ' + apiKey;
+    headers['anthropic-beta'] = 'oauth-2025-04-20';
+  } else {
+    headers['x-api-key'] = apiKey;
+  }
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
+    headers,
     body: JSON.stringify({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 2048,
@@ -473,42 +1632,490 @@ async function callClaude(apiKey, persona, hist) {
     })
   });
   if(!res.ok) {
-    const err = await res.json().catch(() => ({}));
+    const err = await res.json().catch(()=>({}));
     throw new Error(err.error?.message || `HTTP ${res.status}`);
   }
   const data = await res.json();
   return data.content[0].text;
 }
 
-// ===== Modal =====
 function openKeyModal() {
-  document.getElementById('apiKeyInput').value = getKey();
-  document.getElementById('keyModal').classList.add('show');
+  document.getElementById('apiKeyInput').value = getApiKey();
+  document.getElementById('keyModalBg').classList.add('show');
   setTimeout(() => document.getElementById('apiKeyInput').focus(), 50);
 }
-function closeKeyModal() { document.getElementById('keyModal').classList.remove('show'); }
-function saveKey() {
+function closeKeyModal() { document.getElementById('keyModalBg').classList.remove('show'); }
+function saveApiKey() {
   const v = document.getElementById('apiKeyInput').value.trim();
-  setKey(v);
-  closeKeyModal();
+  setApiKey(v); closeKeyModal();
 }
 
-// ===== Mobile menu =====
-document.getElementById('menuBtn').addEventListener('click', () => {
-  document.getElementById('aside').classList.toggle('show');
+// init team
+loadTeamHist();
+renderTeamGrid();
+renderTeamQuick();
+renderInProgress();
+renderProjects();
+if(typeof renderQuickLinks === 'function') renderQuickLinks();
+updateKeyBtnUI();
+document.getElementById('teamKeyBtn')?.addEventListener('click', openKeyModal);
+document.getElementById('keyModalBg')?.addEventListener('click', (e) => { if(e.target.id==='keyModalBg') closeKeyModal(); });
+document.getElementById('personaModal')?.addEventListener('click', (e) => { if(e.target.id==='personaModal') closePersonaModal(); });
+
+// Team section collapse
+document.getElementById('teamToggle')?.addEventListener('click', function() {
+  const body = document.getElementById('teamBody');
+  if(body.classList.contains('collapsed')) { body.classList.remove('collapsed'); this.textContent = '접기 ▴'; }
+  else { body.classList.add('collapsed'); this.textContent = '펼치기 ▾'; }
 });
 
-// ===== Init =====
-document.getElementById('keyBtn').addEventListener('click', openKeyModal);
-document.getElementById('keyModal').addEventListener('click', (e) => { if(e.target.id === 'keyModal') closeKeyModal(); });
-loadHistory();
-renderSidebar();
-updateKeyBtn();
+// scroll spy
+const sections = ['hero', 'team-section', 'mid', 'news-section', 'deadlines-section'];
+let scrollTicking = false;
+window.addEventListener('scroll', () => {
+  if (!scrollTicking) {
+    requestAnimationFrame(() => {
+      const scrollY = window.scrollY + 200;
+      let active = 'hero';
+      sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.offsetTop <= scrollY) active = id;
+      });
+      document.querySelectorAll('.nav-item').forEach(t => {
+        t.classList.toggle('active', t.dataset.section === active);
+      });
+      scrollTicking = false;
+    });
+    scrollTicking = true;
+  }
+});
 
-// URL ?agent=birch 자동 선택
-const urlAgent = new URLSearchParams(location.search).get('agent');
-if(urlAgent && PERSONAS.find(p => p.id === urlAgent)) selectPersona(urlAgent);
+// ═══ TOOLS ═══
+const tools = [
+  { name: 'InterBuild', desc: 'DDP Catchwin', icon: "\uD83C\uDFD7\uFE0F", color: 'tile-orange', url: 'https://nextsunny-ai.github.io/ddp-catchwin/' },
+  { name: 'Catch Game', desc: 'Museum Master', icon: "\uD83C\uDFAE", color: 'tile-blue', url: 'https://nextsunny-ai.github.io/museum-master/' },
+  { name: 'Visual Maker', desc: 'AI Image Gen', icon: "\uD83C\uDFA8", color: 'tile-purple', url: 'https://visual.sunnytoon.com', wide: true },
+  { name: 'Sunny Team', desc: 'Dashboard', icon: "\u26A1", color: 'tile-orange', url: 'https://team.sunnytoon.com' },
+  { name: 'IMG Cut', desc: 'Image Editor', icon: "\u2702\uFE0F", color: 'tile-teal', url: '#' },
+  { name: 'NORY AR', desc: 'AR Experience', icon: "\uD83D\uDCF1", color: 'tile-pink', url: '#' },
+  { name: 'Google Drive', desc: 'Files', icon: "\uD83D\uDCC1", color: 'tile-yellow', url: 'https://drive.google.com' },
+  { name: 'Calendar', desc: 'Schedule', icon: "\uD83D\uDCC5", color: 'tile-green', url: 'https://calendar.google.com' },
+  { name: 'Gmail', desc: 'Email', icon: "\u2709\uFE0F", color: 'tile-dark', url: 'https://mail.google.com' },
+  { name: 'GitHub', desc: 'Repos', icon: "\uD83D\uDC19", color: 'tile-dark', url: 'https://github.com/nextsunny-ai' },
+  { name: 'Anthropic', desc: 'Claude Console', icon: "\uD83E\uDD16", color: 'tile-dark', url: 'https://console.anthropic.com' },
+  { name: 'Vercel', desc: 'Deploy', icon: "\u25B2", color: 'tile-dark', url: 'https://vercel.com/dashboard' },
+  { name: 'Netlify', desc: 'Hosting', icon: "\uD83C\uDF10", color: 'tile-teal', url: 'https://app.netlify.com' },
+  { name: 'Oracle', desc: 'jinny-bot Cloud', icon: "\u2601\uFE0F", color: 'tile-orange', url: 'https://cloud.oracle.com' },
+  { name: 'Google Cloud', desc: 'Gemini API', icon: "\uD83C\uDF24\uFE0F", color: 'tile-blue', url: 'https://console.cloud.google.com' },
+  { name: 'Supabase', desc: 'Database', icon: "\u26A1", color: 'tile-green', url: 'https://supabase.com/dashboard' },
+  { name: '\uD6C4\uC774\uC988', desc: 'Domain', icon: "\uD83D\uDD17", color: 'tile-yellow', url: 'https://whois.co.kr' },
+];
 
+const grid = document.getElementById('toolsGrid');
+if (grid) {
+  tools.forEach(t => {
+    const a = document.createElement('a');
+    a.className = 'tool-tile ' + t.color + (t.wide ? ' wide' : '');
+    a.href = t.url; a.target = '_blank'; a.rel = 'noopener';
+    a.innerHTML = '<div class="icon">' + t.icon + '</div><div><div class="name">' + t.name + '</div><div class="desc">' + t.desc + '</div></div>';
+    grid.appendChild(a);
+  });
+}
+
+// ═══ GITHUB REPOS (옛 = 자동 fetch, 현재 = 큐레이션된 PROJECTS로 교체 = 비활성) ═══
+async function loadProjects_DISABLED() {
+  try {
+    const res = await fetch('https://api.github.com/users/nextsunny-ai/repos?sort=pushed&per_page=20');
+    const repos = await res.json();
+    if (!Array.isArray(repos)) return;
+    const list = document.getElementById('projectsList');
+    list.innerHTML = '';
+    repos.forEach(repo => {
+      const a = document.createElement('a');
+      a.className = 'project-card';
+      const pageUrl = repo.has_pages ? 'https://nextsunny-ai.github.io/' + repo.name + '/' : repo.html_url;
+      a.href = pageUrl; a.target = '_blank'; a.rel = 'noopener';
+      a.innerHTML =
+        '<div class="repo-name">' + escHtml(repo.name) + '</div>' +
+        '<div class="repo-desc">' + escHtml(repo.description || 'No description') + '</div>' +
+        '<div class="repo-time">pushed ' + timeAgo(repo.pushed_at) + '</div>';
+      list.appendChild(a);
+    });
+    if (list.children.length === 0) {
+      list.innerHTML = '<div style="color:var(--text-mute);font-size:0.78rem;">No projects found</div>';
+    }
+  } catch(e) {
+    document.getElementById('projectsList').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">&#128230;</div><div class="empty-msg">프로젝트를 불러올 수 없습니다</div><button class="empty-btn" onclick="loadProjects()">다시 시도</button></div>';
+  }
+}
+// loadProjects(); // 옛 GitHub API 자동 fetch = 비활성. PROJECTS 큐레이션 사용.
+
+// ═══ NOTICE ═══
+const notices = [
+  { sender: 'GENIE', cls: 'sender-genie', msg: '뉴스·트렌드 큐레이션 (= AI / 콘텐츠IP / 공연 / 전시 / 지원사업) 데이터 수집 완료. (★ 2026-04-28 하나 → 지니로 역할 이전)', time: '10분 전' },
+  { sender: 'RIAN', cls: 'sender-rian', msg: 'sunny_home 라이트 톤 + Team 3컬럼 + 진행 중 + Recent Projects 통합 완료.', time: '방금' },
+  { sender: 'TEO', cls: 'sender-teo', msg: 'team.sunnytoon.com wrapper = 옛 (= 비치 잔존) = Oracle Console 점검 필요.', time: '오늘' },
+  { sender: 'BIRCH', cls: 'sender-birch', msg: 'NORY CITY v8 = Han 한국어 Brand Bible 수정본 = 필립 영문 위 최종. RAUKH 백스테이지 철학 + 35~55 Anchor.', time: '오늘' },
+  { sender: 'SERA', cls: 'sender-sera', msg: '조선요괴전 자료 정리·학습 = 다음 우선순위.', time: '대기' },
+];
+const noticeList = document.getElementById('noticeList');
+notices.forEach(n => {
+  const div = document.createElement('div');
+  div.className = 'notice-card';
+  div.innerHTML = '<span class="notice-sender ' + n.cls + '">' + n.sender + '</span>' +
+    '<div class="notice-body"><div class="msg">' + n.msg + '</div><div class="time">' + n.time + '</div></div>';
+  noticeList.appendChild(div);
+});
+
+// ═══ NEWS ═══
+const catIcons = {
+  ai: "\uD83E\uDD16", performance: "\uD83C\uDFAD", exhibition: "\uD83D\uDDBC\uFE0F",
+  content_ip: "\uD83C\uDFAC", design: "\u2728", grants: "\uD83D\uDCCB", festival: "\uD83C\uDFB5"
+};
+const catColors = {
+  ai: 'linear-gradient(135deg,#0a1628,#0d2137)',
+  performance: 'linear-gradient(135deg,#1a0a14,#2a0f1f)',
+  exhibition: 'linear-gradient(135deg,#0a1a1a,#0f2a2a)',
+  content_ip: 'linear-gradient(135deg,#14091a,#1f0f2a)',
+  design: 'linear-gradient(135deg,#1a1608,#2a2210)',
+  grants: 'linear-gradient(135deg,#081a0d,#0f2a18)',
+  festival: 'linear-gradient(135deg,#1a120a,#2a1a0f)'
+};
+const catNames = {
+  ai: 'AI', performance: '공연', exhibition: '전시',
+  content_ip: '콘텐츠IP', design: '디자인', grants: '지원사업', festival: '페스티벌'
+};
+
+var allNewsItems = []; // var = hoisted = TDZ 회피 (옛 let = 실행 도달 전 에러 사고)
+
+function buildNewsItems(data) {
+  allNewsItems = [];
+  if (!data || !data.categories) return;
+  // ★ 당일~3일 이내만 (대표님 2026-05-11 명시 = "당일만 최고 2-3일")
+  const NEWS_DAYS = 3;
+  const cutoff = new Date(Date.now() - NEWS_DAYS * 24 * 60 * 60 * 1000);
+  data.categories.forEach(cat => {
+    if (cat.id === 'english') return;
+    (cat.items || []).forEach(item => {
+      // 날짜 필터
+      if (item.published) {
+        const pubDate = new Date(item.published);
+        if (!isNaN(pubDate.getTime()) && pubDate < cutoff) return; // skip 옛 뉴스
+      }
+      allNewsItems.push({
+        cat: cat.id, catName: catNames[cat.id] || cat.name,
+        title: item.title, url: item.url || '#', source: item.source || '',
+        summary: item.summary || '', published: item.published || '', image: item.image || ''
+      });
+    });
+  });
+  // 최신순 정렬
+  allNewsItems.sort((a, b) => {
+    const da = a.published ? new Date(a.published).getTime() : 0;
+    const db = b.published ? new Date(b.published).getTime() : 0;
+    return db - da;
+  });
+}
+
+function renderNews(filter) {
+  const newsGrid = document.getElementById('newsGrid');
+  newsGrid.innerHTML = '';
+  const items = filter === 'all' ? allNewsItems : allNewsItems.filter(n => n.cat === filter);
+  if (!items.length) {
+    newsGrid.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128240;</div><div class="empty-msg">뉴스가 없습니다</div><button class="empty-btn" onclick="loadExternalData()">다시 시도</button></div>';
+    return;
+  }
+  items.forEach((n, i) => {
+    const card = document.createElement('a');
+    const isFeatured = (filter === 'all' && i === 0);
+    card.className = 'news-text-item';
+    card.href = n.url; card.target = '_blank'; card.rel = 'noopener';
+    const icon = catIcons[n.cat] || "\uD83D\uDCF0";
+    const bg = catColors[n.cat] || catColors.ai;
+    card.innerHTML =
+      '<span class="nti-cat cat-' + n.cat + '">' + n.catName + '</span>' +
+      '<span class="nti-title">' + escHtml(n.title) + '</span>' +
+      '<span class="nti-source">' + escHtml(n.source) + (n.published ? ' · ' + n.published : '') + '</span>';
+    newsGrid.appendChild(card);
+  });
+}
+
+function renderNewsPick() {
+  const pickContainer = document.getElementById('newsPick');
+  pickContainer.innerHTML = '';
+  if (!allNewsItems.length) return;
+  const priority = ['ai','content_ip','performance','exhibition','grants','design','festival'];
+  const sorted = [...allNewsItems].sort((a, b) => {
+    const pa = priority.indexOf(a.cat);
+    const pb = priority.indexOf(b.cat);
+    return (pa === -1 ? 99 : pa) - (pb === -1 ? 99 : pb);
+  });
+  const picked = [];
+  const usedCats = new Set();
+  sorted.forEach(n => { if (picked.length >= 12 || usedCats.has(n.cat)) return; picked.push(n); usedCats.add(n.cat); });
+  sorted.forEach(n => { if (picked.length >= 12 || picked.includes(n)) return; picked.push(n); });
+
+  picked.forEach(n => {
+    const a = document.createElement('a');
+    a.className = 'news-text-item';
+    a.href = n.url; a.target = '_blank'; a.rel = 'noopener';
+    a.innerHTML =
+      '<span class="nti-cat cat-' + n.cat + '">' + n.catName + '</span>' +
+      '<span class="nti-title">' + escHtml(n.title) + '</span>' +
+      '<span class="nti-source">' + escHtml(n.source) + '</span>';
+    pickContainer.appendChild(a);
+  });
+}
+
+document.querySelectorAll('.news-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.news-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderNews(tab.dataset.cat);
+  });
+});
+
+// ═══ DATA FETCH ═══
+async function loadExternalData() {
+  let data = null;
+  try {
+    const res = await fetch('sunny_home_data.json');
+    if (res.ok) data = await res.json();
+  } catch(e) {}
+
+  if (!data) {
+    data = {
+      categories: [
+        { id: 'ai', name: 'AI 트렌드', items: [
+          { title: 'Claude 4.6 Released — Opus & Sonnet', url: '#', source: 'Anthropic', summary: 'Enhanced reasoning, longer context, improved tool use.', published: '2026-04-26' },
+          { title: 'Sora 2.0: OpenAI Video Leap', url: '#', source: 'OpenAI', summary: 'Cinematic 4K video generation.', published: '2026-04-25' },
+          { title: 'ComfyUI 3.0 Major Update', url: '#', source: 'ComfyUI', summary: 'Native video generation + cloud rendering.', published: '2026-04-24' },
+        ]},
+        { id: 'performance', name: '공연', items: [
+          { title: '서울 공연예술 페스티벌 2026', url: '#', source: '예술의전당', summary: '5월 서울 전역 대규모 축제.', published: '2026-05-01' },
+        ]},
+        { id: 'exhibition', name: '전시', items: [
+          { title: '국립현대미술관 미디어아트 특별전', url: '#', source: 'MMCA', summary: 'AI와 인간 창작의 경계 탐구.', published: '2026-05-01' },
+        ]},
+        { id: 'content_ip', name: '콘텐츠IP', items: [
+          { title: '화산귀환 시즌3 제작 확정', url: '#', source: 'Naver Webtoon', summary: '글로벌 동시 연재 + 굿즈 콜라보.', published: '2026-04-20' },
+        ]},
+        { id: 'grants', name: '지원사업', items: [
+          { title: 'KOFIC 2026 하반기 지원사업 공고', url: '#', source: 'KOFIC', summary: '독립영화 제작지원 총 200억 규모.', published: '2026-04-22' },
+        ]},
+        { id: 'festival', name: '페스티벌', items: [
+          { title: 'NORY CITY Summer Festival', url: '#', source: 'Birch Sound', summary: 'AR + 라이브 뮤직 융합.', published: '2026-07-01' },
+        ]},
+      ]
+    };
+  }
+
+  if (data.categories) {
+    const engCat = data.categories.find(c => c.id === 'english');
+    if (engCat && engCat.items && engCat.items.length) {
+      const e = engCat.items[0];
+      if (e.phrase) document.getElementById('engPhrase').textContent = '"' + e.phrase + '"';
+      if (e.meaning) document.getElementById('engMeaning').textContent = e.meaning;
+      if (e.example) document.getElementById('engExample').textContent = e.example;
+    } else {
+      const e = defaultEnglish[Math.floor(Math.random() * defaultEnglish.length)];
+      document.getElementById('engPhrase').textContent = '"' + e.phrase + '"';
+      document.getElementById('engMeaning').textContent = e.meaning;
+      document.getElementById('engExample').textContent = e.example;
+    }
+  }
+
+  if (data.weather) {
+    document.getElementById('weatherTemp').innerHTML = data.weather.temp + '&deg;';
+    document.getElementById('weatherDesc').textContent = data.weather.desc;
+  }
+
+  buildNewsItems(data);
+  renderNewsPick();
+  renderNews('all');
+}
+loadExternalData();
+
+// ═══ DEADLINES ═══
+async function loadDeadlines() {
+  const grid = document.getElementById('deadlinesGrid');
+  let items = [];
+  try {
+    const res = await fetch('data/deadlines.json', { cache: 'no-store' });
+    if (res.ok) items = (await res.json()).items || [];
+  } catch(e) {}
+
+  if (!items.length) {
+    items = [
+      { title: 'KOFIC 2026 하반기 지원사업 서류', due: '2026-05-10', category: '지원사업', org: 'KOFIC' },
+      { title: '굿즈모먼트 화산귀환 콜라보 1차 납품', due: '2026-05-04', category: '납품', org: 'MORI' },
+      { title: '버치사운드 NORY CITY 본계약 검토', due: '2026-05-08', category: '계약', org: 'BIRCH' },
+      { title: '넥스트아트 김감독 외주 1차 컷 회신', due: '2026-05-02', category: '회신', org: 'NEA' },
+    ];
+  }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const enriched = items.map(d => {
+    const due = new Date(d.due);
+    const diff = Math.ceil((due - today) / 86400000);
+    let urgency = '';
+    if (diff <= 2) urgency = 'urgent';
+    else if (diff <= 5) urgency = 'soon';
+    return { ...d, diff, urgency };
+  }).sort((a,b) => a.diff - b.diff);
+
+  grid.innerHTML = '';
+  enriched.forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'deadline-card ' + d.urgency;
+    const dday = d.diff <= 0 ? 'TODAY' : ('D-' + d.diff);
+    card.innerHTML =
+      '<div class="dday">' + dday + '</div>' +
+      '<div class="title">' + escHtml(d.title) + '</div>' +
+      '<div class="meta">' + escHtml(d.category || '') + (d.org ? ' &middot; ' + escHtml(d.org) : '') + '</div>';
+    grid.appendChild(card);
+  });
+}
+loadDeadlines();
+
+// ═══ OUTPUTS ═══
+async function loadOutputs() {
+  const grid = document.getElementById('outputsGrid');
+  let items = [];
+  try {
+    const res = await fetch('data/outputs.json', { cache: 'no-store' });
+    if (res.ok) items = (await res.json()).items || [];
+  } catch(e) {}
+
+  for (let i = 0; i < 6; i++) {
+    const tile = document.createElement('a');
+    tile.className = 'output-tile';
+    tile.target = '_blank'; tile.rel = 'noopener';
+    const item = items[i];
+    if (item && item.image) {
+      tile.href = item.url || item.image;
+      tile.innerHTML =
+        '<img src="' + item.image + '" alt="' + escHtml(item.title || 'output') + '" loading="lazy">' +
+        (item.title ? '<div class="label">' + escHtml(item.title) + '</div>' : '');
+    } else {
+      tile.href = 'https://visual.sunnytoon.com';
+      tile.innerHTML = '<div class="placeholder">+</div>';
+    }
+    grid.appendChild(tile);
+  }
+}
+loadOutputs();
+
+// ═══ FLIPBOOK ═══
+async function loadFlipbook() {
+  const stage = document.getElementById('flipbook');
+  let pages = [];
+  try {
+    const res = await fetch('data/curation.json', { cache: 'no-store' });
+    if (res.ok) pages = (await res.json()).pages || [];
+  } catch(e) {}
+
+  if (!pages.length) {
+    pages = [
+      { kind: '책', quote: '디자인은 단순함이 아니라, 단순해 보이게 만드는 일이다.', attribution: '— 디터 람스, Less but Better' },
+      { kind: '영상', quote: '진짜 만든 사람의 손길은 30초 안에 드러난다.', attribution: '— Apple Design Stories, 2026' },
+      { kind: '전시', quote: '미디어아트는 관객을 작품의 일부로 만드는 순간 완성된다.', attribution: '— 국립현대미술관 기획전 도록' },
+      { kind: '말', quote: '브랜드는 매일 흘리는 작은 흔적의 총합이다.', attribution: '— 하나(HANA), 오늘의 큐레이션' },
+    ];
+  }
+
+  stage.innerHTML = '';
+  pages.forEach((p, i) => {
+    const page = document.createElement('div');
+    page.className = 'flip-page';
+    page.style.zIndex = (pages.length - i);
+    page.innerHTML =
+      '<h3>' + escHtml(p.kind || 'Curation') + '</h3>' +
+      '<div class="quote">' + escHtml(p.quote || '') + '</div>' +
+      '<div class="attribution">' + escHtml(p.attribution || '') + '</div>' +
+      '<div class="flip-page-num">' + String(i+1).padStart(2,'0') + ' / ' + String(pages.length).padStart(2,'0') + '</div>';
+    stage.appendChild(page);
+  });
+
+  let cursor = 0;
+  const total = pages.length;
+  const progress = document.getElementById('flipProgress');
+  const prevBtn = document.getElementById('flipPrev');
+  const nextBtn = document.getElementById('flipNext');
+
+  function render() {
+    stage.querySelectorAll('.flip-page').forEach((el, idx) => {
+      el.classList.toggle('flipped', idx < cursor);
+    });
+    progress.textContent = (cursor + 1) + ' / ' + total;
+    prevBtn.disabled = cursor === 0;
+    nextBtn.disabled = cursor >= total - 1;
+  }
+  render();
+
+  nextBtn.addEventListener('click', () => { if (cursor < total - 1) { cursor++; render(); } });
+  prevBtn.addEventListener('click', () => { if (cursor > 0) { cursor--; render(); } });
+
+  let startX = 0;
+  stage.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (dx < -50 && cursor < total - 1) { cursor++; render(); }
+    else if (dx > 50 && cursor > 0) { cursor--; render(); }
+  });
+
+  document.addEventListener('keydown', e => {
+    const rect = document.getElementById('flipbook-section').getBoundingClientRect();
+    if (rect.top >= window.innerHeight || rect.bottom <= 0) return;
+    if (e.key === 'ArrowRight' && cursor < total - 1) { cursor++; render(); }
+    else if (e.key === 'ArrowLeft' && cursor > 0) { cursor--; render(); }
+  });
+}
+loadFlipbook();
+
+// ═══ BUILD META ═══
+async function loadBuildMeta() {
+  let meta = null;
+  try {
+    const res = await fetch('data/build.json', { cache: 'no-store' });
+    if (res.ok) meta = await res.json();
+  } catch(e) {}
+  const el = document.getElementById('buildMeta');
+  const now = new Date();
+  const stamp = now.getFullYear() + '-' +
+    String(now.getMonth()+1).padStart(2,'0') + '-' +
+    String(now.getDate()).padStart(2,'0') + ' ' +
+    String(now.getHours()).padStart(2,'0') + ':' +
+    String(now.getMinutes()).padStart(2,'0');
+  const built = meta && meta.built_at ? meta.built_at : 'no auto-build';
+  el.textContent = 'build · ' + built + '  ·  rendered ' + stamp + ' KST';
+}
+loadBuildMeta();
+
+// ═══ HELPERS ═══
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return mins + 'm ago';
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return hours + 'h ago';
+  return Math.floor(hours / 24) + 'd ago';
+}
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ═══ SCROLL REVEAL ═══
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 </script>
 </body>
 </html>
