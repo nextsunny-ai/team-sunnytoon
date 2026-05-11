@@ -356,12 +356,20 @@ function updateKeyBtn() {
 // ===== Render sidebar =====
 function avatarBg(color) { return color; }
 function avatarInitial(p) { return p.name.charAt(0); }
+function getVisibility() {
+  try { return JSON.parse(localStorage.getItem('sunny_persona_visibility') || '{}'); } catch(e){ return {}; }
+}
+function isPersonaVisible(id) {
+  const v = getVisibility();
+  return v[id] !== false;
+}
+
 function renderSidebar() {
   const groups = { genie: 'genieList', company: 'companyList', agency: 'agencyList', game: 'gameList' };
   Object.keys(groups).forEach(g => {
     const ul = document.getElementById(groups[g]);
     if (!ul) return;
-    ul.innerHTML = PERSONAS.filter(p => p.group === g).map(p => `
+    ul.innerHTML = PERSONAS.filter(p => p.group === g && isPersonaVisible(p.id)).map(p => `
       <div class="persona-item" data-id="${p.id}" onclick="selectPersona('${p.id}')">
         <img class="p-avatar" src="${p.avatar}" alt="${p.name}" onerror="this.outerHTML='<div class=&quot;p-avatar&quot; style=&quot;background:${p.color}&quot;>${p.name.charAt(0)}</div>'">
         <div class="p-info">
