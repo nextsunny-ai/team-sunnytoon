@@ -344,8 +344,24 @@ function loadHistory() {
 function saveHistory() {
   try { localStorage.setItem(LS_HIST, JSON.stringify(history)); } catch(e){}
 }
-function getKey() { return localStorage.getItem(LS_KEY) || ''; }
-function setKey(k) { if(k) localStorage.setItem(LS_KEY, k); else localStorage.removeItem(LS_KEY); updateKeyBtn(); }
+// ★ 쿠키 + localStorage 둘 다 = home·team 같은 .sunnytoon.com 공유 (= 한 번 박으면 둘 다 작동)
+function getCookieKey() {
+  const m = document.cookie.match(/(?:^|; )sunny_team_apikey=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : '';
+}
+function setCookieKey(k) {
+  if (k) {
+    document.cookie = 'sunny_team_apikey=' + encodeURIComponent(k) + '; domain=.sunnytoon.com; path=/; max-age=31536000; SameSite=Strict' + (location.protocol === 'https:' ? '; Secure' : '');
+  } else {
+    document.cookie = 'sunny_team_apikey=; domain=.sunnytoon.com; path=/; max-age=0';
+  }
+}
+function getKey() { return localStorage.getItem(LS_KEY) || getCookieKey() || ''; }
+function setKey(k) {
+  if(k) { localStorage.setItem(LS_KEY, k); setCookieKey(k); }
+  else { localStorage.removeItem(LS_KEY); setCookieKey(''); }
+  updateKeyBtn();
+}
 function updateKeyBtn() {
   const btn = document.getElementById('keyBtn');
   const lbl = document.getElementById('keyLabel');
